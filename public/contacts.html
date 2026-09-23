@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Contacts — TerraTern</title>
+<link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#00215C;--blue:#255CC1;--bg:#f0f4fb;--surface:#fff;--border:#dde6f5;--text:#00215C;--muted:#5a7ab5;--green:#1a9e5c;--red:#e03e3e;--font:'Inter',system-ui,sans-serif;--radius:8px}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
+.header{background:var(--navy);padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+.logo img{height:26px}
+.sub{font-size:11px;color:#9acbfd;letter-spacing:1px;text-transform:uppercase;flex:1}
+.nav-link{font-size:11px;color:#9acbfd;text-decoration:none;border:1px solid rgba(154,203,253,.3);padding:5px 12px;border-radius:6px}
+.nav-link:hover{background:rgba(154,203,253,.15)}
+.toolbar{padding:12px 20px;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:52px;z-index:40}
+.search{border:1.5px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;font-family:var(--font);outline:none;width:200px}
+.search:focus{border-color:var(--blue)}
+.sel{border:1.5px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;font-family:var(--font);outline:none;background:#fff;cursor:pointer}
+.count{font-size:11px;color:var(--muted);flex:1}
+.btn{background:var(--blue);color:#fff;border:none;padding:7px 16px;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;transition:all .15s}
+.btn:hover{background:var(--navy)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--blue);border:1.5px solid var(--blue);padding:6px 12px;cursor:pointer;font-family:var(--font);font-size:11px;font-weight:600;border-radius:6px}
+.page{padding:20px}
+.table-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:10px 14px;background:#f0f4fb;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border)}
+td{padding:10px 14px;border-bottom:1px solid #f0f4fb;color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafcff}
+.badge{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:700;white-space:nowrap}
+.badge-yes{background:rgba(26,158,92,.15);color:var(--green)}
+.badge-no{background:#f5f5f5;color:var(--muted)}
+.badge-paid{background:rgba(37,92,193,.15);color:var(--blue)}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-top:1px solid var(--border)}
+.pg-info{font-size:11px;color:var(--muted)}
+.pg-btns{display:flex;gap:6px}
+.sync-msg{font-size:11px;font-weight:600;margin-left:8px}
+.sync-msg.ok{color:var(--green)}.sync-msg.err{color:var(--red)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid rgba(37,92,193,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:5px}
+.tab-nav{display:flex;align-items:center;gap:4px;flex:1;justify-content:center}
+.tab-nav a{font-size:12px;font-weight:600;color:rgba(154,203,253,.7);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all .15s;white-space:nowrap}
+.tab-nav a:hover{color:#fff}
+.tab-nav a.active{background:#fff;color:var(--navy)}
+.smtp-pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px;cursor:pointer;border:none;font-family:var(--font);transition:all .15s;flex-shrink:0}
+.smtp-pill.live{background:rgba(26,158,92,.2);color:#4ade80}
+.smtp-pill.down{background:rgba(224,62,62,.2);color:#f87171}
+.smtp-pill.checking{background:rgba(154,203,253,.15);color:rgba(154,203,253,.7)}
+.smtp-modal{display:none;position:fixed;top:52px;right:16px;background:#1a2744;border:1.5px solid rgba(154,203,253,.2);border-radius:10px;padding:14px 16px;z-index:100;min-width:240px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.smtp-modal.show{display:block}
+.smtp-modal-title{font-size:10px;font-weight:700;color:rgba(154,203,253,.7);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.smtp-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid rgba(154,203,253,.1)}
+.smtp-row:last-child{border-bottom:none}
+.smtp-key{color:rgba(154,203,253,.6)}.smtp-val{color:#fff;font-weight:600}
+.smtp-err{font-size:11px;color:#f87171;margin-top:8px;padding-top:8px;border-top:1px solid rgba(154,203,253,.1)}
+
+[data-theme='dark']{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--navy:#1e293b}
+[data-theme='dark'] .header{background:#0f172a}
+[data-theme='dark'] .tab-nav a.active{background:#e2e8f0;color:#0f172a}
+.theme-btn{background:transparent;border:1px solid rgba(154,203,253,.3);color:rgba(154,203,253,.8);padding:5px 10px;border-radius:20px;cursor:pointer;font-size:12px;font-family:var(--font);flex-shrink:0}
+.theme-btn:hover{background:rgba(154,203,253,.15)}
+</style>
+
+
+</head>
+<body>
+<div class="header">
+  <div class="logo"><img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/></div>
+  <div class="sub">Email Contacts</div>
+<nav class="tab-nav">
+  <a href="/home.html" class="">🏠 Home</a>
+  <a href="/contacts.html" class="active">👥 Contacts</a>
+  <a href="/compose.html" class="">✏️ Compose</a>
+  <a href="/analytics.html" class="">📊 Analytics</a>
+</nav>
+<button class="smtp-pill checking" id="smtp-pill" onclick="toggleSMTPModal()"><span class="spin"></span> SMTP</button>
+<div class="smtp-modal" id="smtp-modal">
+  <div class="smtp-modal-title">SMTP Connection</div>
+  <div class="smtp-row"><span class="smtp-key">Host</span><span class="smtp-val">node21.urmailtechno.com</span></div>
+  <div class="smtp-row"><span class="smtp-key">Port</span><span class="smtp-val">587</span></div>
+  <div class="smtp-row"><span class="smtp-key">Domain</span><span class="smtp-val">marketing.terratern.in</span></div>
+  <div class="smtp-row"><span class="smtp-key">User</span><span class="smtp-val">user_teratern</span></div>
+  <div class="smtp-err" id="smtp-err" style="display:none"></div>
+</div>
+</div>
+
+<div class="toolbar">
+  <input class="search" id="search" placeholder="Search name or email..." oninput="debounceLoad()"/>
+  <select class="sel" id="stage-filter" onchange="loadContacts()">
+    <option value="all">All Stages</option>
+    <option>Attended</option>
+    <option>Booked</option>
+    <option>Call Later</option>
+    <option>Casual Browsing</option>
+    <option>Decision Pending</option>
+    <option>Dropped</option>
+    <option>Enrolled with Other</option>
+    <option>Financial Issues</option>
+    <option>Follow Up</option>
+    <option>Future Qualified</option>
+    <option>Interested</option>
+    <option>Invalid</option>
+    <option>Message Dropped (Intl.)</option>
+    <option>Need More Guidance</option>
+    <option>Need time for Payment</option>
+    <option>New</option>
+    <option>Not Attended</option>
+    <option>Parents/Spouse Denied</option>
+    <option>Plan Dropped</option>
+    <option>Plan Postponed</option>
+    <option>Positive</option>
+    <option>Price Issue</option>
+    <option>Rescheduled</option>
+    <option>RNR</option>
+    <option>Switched Off/No Not Reachable</option>
+    <option>Test Lead</option>
+    <option>Unqualified</option>
+    <option>Visualization</option>
+  </select>
+  <span class="count" id="count">—</span>
+  <span class="sync-msg" id="sync-msg"></span>
+  <button class="btn-ghost" onclick="loadContacts()">↻ Refresh</button>
+  <button class="btn" id="sync-btn" onclick="syncContacts()">⬇ Sync from Metabase</button>
+</div>
+
+<div class="page">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Mobile</th>
+          <th>Stage</th>
+          <th>Applications</th>
+          <th>Webinar</th>
+          <th>Payment</th>
+          <th>Created</th>
+          <th>Sends</th>
+          <th>Delivered</th>
+          <th>Opens</th>
+          <th>Clicks</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <tr><td colspan="12" style="text-align:center;padding:40px;color:var(--muted)">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="pagination">
+    <span class="pg-info" id="pg-info"></span>
+    <div class="pg-btns">
+      <button class="btn-ghost" onclick="prevPage()" id="prev-btn">← Prev</button>
+      <button class="btn-ghost" onclick="nextPage()" id="next-btn">Next →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LIMIT = 50;
+let offset = 0, total = 0, debTimer;
+
+// Send/delivered/open/click counts now come straight from email_contacts
+// (emails_sent, emails_delivered, emails_opened, emails_clicked columns),
+// kept up to date by the send/track endpoints — no more scanning all of
+// email_sends in the browser on every page load.
+function debounceLoad(){clearTimeout(debTimer);debTimer=setTimeout(()=>{offset=0;loadContacts();},400);}
+
+async function loadContacts(){
+  const stage = document.getElementById('stage-filter').value;
+  const search = document.getElementById('search').value.trim();
+  let url = `/api/email/contacts?limit=${LIMIT}&offset=${offset}`;
+  if(stage!=='all') url+=`&stage=${encodeURIComponent(stage)}`;
+  if(search) url+=`&search=${encodeURIComponent(search)}`;
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--muted)"><span class="spin"></span>Loading...</td></tr>`;
+  try{
+    const r=await fetch(url);
+    const d=await r.json();
+    total=parseInt(d.total)||0;
+    document.getElementById('count').textContent=`${total.toLocaleString()} contacts`;
+    document.getElementById('pg-info').textContent=`Showing ${offset+1}–${Math.min(offset+LIMIT,total)} of ${total.toLocaleString()}`;
+    document.getElementById('prev-btn').disabled=offset===0;
+    document.getElementById('next-btn').disabled=offset+LIMIT>=total;
+    if(!d.contacts?.length){tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--muted)">No contacts found</td></tr>`;return;}
+    tbody.innerHTML=d.contacts.map(c=>`<tr>
+      <td style="font-weight:600">${esc(c.fullname||'—')}</td>
+      <td>${esc(c.email||'—')}</td>
+      <td>${esc(c.mobile||'—')}</td>
+      <td><span class="badge badge-no">${esc(c.lead_stage||'—')}</span></td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(c.applications||'')}">${esc(c.applications||'—')}</td>
+      <td><span class="badge ${c.webinar_attended==='Yes'?'badge-yes':'badge-no'}">${c.webinar_attended==='Yes'?'Attended':c.webinar_booked==='Yes'?'Booked':'No'}</span></td>
+      <td><span class="badge ${c.payment==='Yes'?'badge-paid':'badge-no'}">${c.payment==='Yes'?'Paid':'No'}</span></td>
+      <td style="color:var(--muted)">${c.created_at?new Date(c.created_at).toLocaleDateString('en-IN'):'—'}</td>
+      <td style="font-weight:700">${c.emails_sent||0}</td>
+      <td style="font-weight:700">${c.emails_delivered||0}</td>
+      <td style="font-weight:700;color:var(--green)">${c.emails_opened||0}</td>
+      <td style="font-weight:700;color:var(--blue)">${c.emails_clicked||0}</td>
+    </tr>`).join('');
+  }catch(e){tbody.innerHTML=`<tr><td colspan="12" style="text-align:center;color:var(--red);padding:30px">Error: ${e.message}</td></tr>`;}
+}
+
+async function syncContacts(){
+  const btn=document.getElementById('sync-btn');
+  const msg=document.getElementById('sync-msg');
+  btn.disabled=true;
+  msg.className='sync-msg';
+
+  try{
+    // Step 1: Fetch from Metabase in browser
+    msg.textContent='Fetching leads from Metabase...';
+    btn.innerHTML='<span class="spin"></span>Fetching...';
+    const mbRes = await fetch('/api/email/metabase-fetch');
+    const leads = await mbRes.json();
+    if(!Array.isArray(leads)) throw new Error(leads.error || 'Bad Metabase response');
+
+    // Step 2: POST in batches of 200, all stamped with the same synced_at
+    // so the Contacts view can show exactly "everyone from this run" —
+    // whoever no longer matches the Metabase query just won't get this
+    // stamp, and drops out of view (their row and history stay in Supabase).
+    const BATCH = 200;
+    const syncedAt = new Date().toISOString();
+    let synced = 0;
+    for(let i=0; i<leads.length; i+=BATCH){
+      const batch = leads.slice(i, i+BATCH);
+      msg.textContent=`Syncing ${synced}/${leads.length}...`;
+      const r = await fetch('/api/email/contacts', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ contacts: batch, synced_at: syncedAt })
+      });
+      const d = await r.json();
+      if(d.error) throw new Error(d.error);
+      synced += d.synced;
+    }
+
+    msg.textContent=`✓ Synced ${synced.toLocaleString()} contacts (showing latest query results only)`;
+    msg.className='sync-msg ok';
+    loadContacts();
+  }catch(e){
+    msg.textContent='Failed: '+e.message;
+    msg.className='sync-msg err';
+  }
+  btn.disabled=false;
+  btn.innerHTML='⬇ Sync from Metabase';
+}
+
+function prevPage(){if(offset>0){offset-=LIMIT;loadContacts();}}
+function nextPage(){if(offset+LIMIT<total){offset+=LIMIT;loadContacts();}}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+window.onload=loadContacts;
+</script>
+<script>
+window.toggleSMTPModal = function(){
+  document.getElementById('smtp-modal').classList.toggle('show');
+};
+document.addEventListener('click', function(e){
+  const modal = document.getElementById('smtp-modal');
+  const pill = document.getElementById('smtp-pill');
+  if(modal && !modal.contains(e.target) && e.target !== pill) modal.classList.remove('show');
+});
+async function checkSMTP(){
+  const pill = document.getElementById('smtp-pill');
+  const errEl = document.getElementById('smtp-err');
+  if(!pill) return;
+  try{
+    const ctrl = new AbortController();
+    setTimeout(()=>ctrl.abort(), 8000);
+    const r = await fetch('/api/email-sync', {signal:ctrl.signal});
+    const d = await r.json();
+    pill.className = 'smtp-pill '+(d.live?'live':'down');
+    pill.innerHTML = d.live?'🟢 SMTP Live':'🔴 SMTP Down';
+    if(errEl){errEl.textContent=d.live?'':(d.message||'Failed');errEl.style.display=d.live?'none':'block';}
+  }catch(e){
+    pill.className='smtp-pill down';
+    pill.innerHTML='🔴 SMTP Down';
+    if(errEl){errEl.textContent=e.name==='AbortError'?'Timed out':e.message;errEl.style.display='block';}
+  }
+}
+checkSMTP();
+</script>
+</body>
+</html>
