@@ -5,6 +5,7 @@ export default async function handler(req, res) {
   const { email } = req.query;
   if (email) {
     await sb.from('email_unsubscribes').upsert([{ email, unsubscribed_at: new Date().toISOString() }]);
+    await sb.rpc('mark_email_unsubscribed', { p_email: email }).catch(() => {});
   }
   res.setHeader('Content-Type','text/html');
   res.end(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Unsubscribed</title>

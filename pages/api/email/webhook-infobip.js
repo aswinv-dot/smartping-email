@@ -48,9 +48,13 @@ export default async function handler(req, res) {
           await sb.rpc('bump_email_contact_stats', { p_email: data[0].email, p_clicked: 1 }).catch(() => {});
         }
       } else if (group === 'REJECTED' || group === 'UNDELIVERABLE') {
-        await sb.from('email_sends')
+        const { data } = await sb.from('email_sends')
           .update({ status: 'failed', error: r.status?.description || group })
-          .eq('infobip_message_id', messageId);
+          .eq('infobip_message_id', messageId)
+          .select('email');
+        if (data?.length) {
+          await sb.rpc('bump_email_contact_stats', { p_email: data[0].email, p_bounced: 1 }).catch(() => {});
+        }
       }
     }
     return res.status(200).json({ success: true, processed: results.length });

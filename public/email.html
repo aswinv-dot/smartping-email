@@ -51,7 +51,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 <div class="main">
   <div class="card">
-    <div class="card-title">SMTP Connection</div>
+    <div class="card-title">Email API Connection</div>
 
     <div class="status-badge checking" id="status-badge">
       <div>
@@ -59,30 +59,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       </div>
       <div>
         <div class="status-text" id="status-text">Checking...</div>
-        <div class="status-msg" id="status-msg">Testing SMTP connection</div>
+        <div class="status-msg" id="status-msg">Testing Email API connection</div>
       </div>
     </div>
 
     <div class="config-grid">
       <div class="config-row">
-        <span class="config-label">Host</span>
-        <span class="config-val">node21.urmailtechno.com</span>
-      </div>
-      <div class="config-row">
-        <span class="config-label">Port</span>
-        <span class="config-val">587</span>
-      </div>
-      <div class="config-row">
-        <span class="config-label">Domain</span>
-        <span class="config-val">marketing.terratern.in</span>
-      </div>
-      <div class="config-row">
-        <span class="config-label">User</span>
-        <span class="config-val">user_teratern</span>
-      </div>
-      <div class="config-row">
-        <span class="config-label">Tenant</span>
-        <span class="config-val">teratern</span>
+        <span class="config-label">Provider</span>
+        <span class="config-val">Infobip (smartping)</span>
       </div>
     </div>
 
@@ -101,20 +85,20 @@ async function testConnection() {
 
   badge.className = 'status-badge checking';
   text.textContent = 'Checking...';
-  msg.textContent = 'Testing SMTP connection';
+  msg.textContent = 'Testing Email API connection';
   btn.disabled = true;
 
   try {
-    const res = await fetch('/api/email-sync');
+    const res = await fetch('/api/email/health');
     const data = await res.json();
     if (data.live) {
       badge.className = 'status-badge live';
       text.textContent = '🟢 Live';
-      msg.textContent = data.message || 'SMTP connection successful';
+      msg.textContent = data.message || 'Email API connection successful';
     } else {
       badge.className = 'status-badge down';
       text.textContent = '🔴 Down';
-      msg.textContent = data.message || 'SMTP connection failed';
+      msg.textContent = data.message || 'Email API connection failed';
     }
   } catch(e) {
     badge.className = 'status-badge down';

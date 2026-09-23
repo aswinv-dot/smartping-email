@@ -68,13 +68,10 @@ tr:hover td{background:#fafcff;cursor:pointer}
   <a href="/compose.html" class="">✏️ Compose</a>
   <a href="/analytics.html" class="active">📊 Analytics</a>
 </nav>
-<button class="smtp-pill checking" id="smtp-pill" onclick="toggleSMTPModal()"><span class="spin"></span> SMTP</button>
+<button class="smtp-pill checking" id="smtp-pill" onclick="toggleSMTPModal()"><span class="spin"></span> Email API</button>
 <div class="smtp-modal" id="smtp-modal">
-  <div class="smtp-modal-title">SMTP Connection</div>
-  <div class="smtp-row"><span class="smtp-key">Host</span><span class="smtp-val">node21.urmailtechno.com</span></div>
-  <div class="smtp-row"><span class="smtp-key">Port</span><span class="smtp-val">587</span></div>
-  <div class="smtp-row"><span class="smtp-key">Domain</span><span class="smtp-val">marketing.terratern.in</span></div>
-  <div class="smtp-row"><span class="smtp-key">User</span><span class="smtp-val">user_teratern</span></div>
+  <div class="smtp-modal-title">Email API Connection</div>
+  <div class="smtp-row"><span class="smtp-key">Provider</span><span class="smtp-val">Infobip (smartping)</span></div>
   <div class="smtp-err" id="smtp-err" style="display:none"></div>
 </div>
 </div>
@@ -83,6 +80,15 @@ tr:hover td{background:#fafcff;cursor:pointer}
   <div class="page-header">
     <div class="page-title">Campaign Analytics</div>
     <button class="btn-ghost" onclick="load()">↻ Refresh</button>
+  </div>
+
+  <div class="campaigns-table" id="live-panel" style="display:none">
+    <table>
+      <thead>
+        <tr><th>Campaign</th><th>Status</th><th>Progress</th><th>Sent</th><th>Failed</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="live-tbody"></tbody>
+    </table>
   </div>
 
   <div class="campaigns-table">
@@ -118,7 +124,39 @@ const SB = 'https://oagsgovnxgiszofgytre.supabase.co';
 const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI';
 const sbH = { apikey:KEY, Authorization:`Bearer ${KEY}` };
 
+async function loadLive() {
+  const r = await fetch(`${SB}/rest/v1/email_campaigns?status=in.(queued,sending,paused)&order=created_at.desc&select=*`, {headers:sbH});
+  const rows = await r.json();
+  const panel = document.getElementById('live-panel');
+  if (!Array.isArray(rows) || !rows.length) { panel.style.display='none'; return; }
+  panel.style.display='block';
+  document.getElementById('live-tbody').innerHTML = rows.map(c=>`
+    <tr>
+      <td style="font-weight:700">${esc(c.stage||c.draft_id)}</td>
+      <td><span class="stat ${c.status==='sending'?'green':c.status==='paused'?'amber':'blue'}">${c.status.toUpperCase()}</span></td>
+      <td>${c.cursor||0} / ${c.total||0}</td>
+      <td><span class="stat green">${c.sent||0}</span></td>
+      <td><span class="stat red">${c.failed||0}</span></td>
+      <td>
+        ${['queued','sending'].includes(c.status)?`<button class="btn-ghost" onclick="campCtl('${c.id}','pause')">Pause</button>`:''}
+        ${c.status==='paused'?`<button class="btn-ghost" onclick="campCtl('${c.id}','resume')">Resume</button>`:''}
+        ${!['done','stopped'].includes(c.status)?`<button class="btn-ghost" onclick="campCtl('${c.id}','stop')">Stop</button>`:''}
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function campCtl(id, action) {
+  try {
+    const r = await fetch('/api/email/campaign-control', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, action})});
+    const d = await r.json();
+    if (!d.success) { alert(d.error||'Failed'); return; }
+    loadLive();
+  } catch (e) { alert(e.message); }
+}
+
 async function load() {
+  loadLive();
   // Fetch drafts for names
   const dr = await fetch('/api/email/drafts').then(r=>r.json());
   const draftMap = {};
@@ -186,6 +224,7 @@ function pct(a,b){return b?`(${Math.round(a/b*100)}%)`:'(0%)';}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 window.onload=load;
+setInterval(loadLive, 10000);
 </script>
 <script>
 window.toggleSMTPModal = function(){
@@ -203,10 +242,10 @@ async function checkSMTP(){
   try{
     const ctrl = new AbortController();
     setTimeout(()=>ctrl.abort(), 8000);
-    const r = await fetch('/api/email-sync', {signal:ctrl.signal});
+    const r = await fetch('/api/email/health', {signal:ctrl.signal});
     const d = await r.json();
     pill.className = 'smtp-pill '+(d.live?'live':'down');
-    pill.innerHTML = d.live?'🟢 SMTP Live':'🔴 SMTP Down';
+    pill.innerHTML = d.live?'🟢 Email API Live':'🔴 Email API Down';
     if(errEl){errEl.textContent=d.live?'':(d.message||'Failed');errEl.style.display=d.live?'none':'block';}
   }catch(e){
     pill.className='smtp-pill down';

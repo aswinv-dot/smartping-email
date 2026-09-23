@@ -1,7 +1,6 @@
 const cron       = require('node-cron');
 const fetch      = require('node-fetch');
 const http       = require('http');
-const nodemailer = require('nodemailer');
 // ── CONFIG ────────────────────────────────────────────────────
 const SMARTPING_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3NmU5MTQ2ZjJjOGUzMGJlY2FlMDVkYiIsIm5hbWUiOiJUZXJyYXRlcm4iLCJhcHBOYW1lIjoiQWlTZW5zeSIsImNsaWVudElkIjoiNjc2ZTkxNDZmMmM4ZTMwYmVjYWUwNWNlIiwiYWN0aXZlUGxhbiI6IlBST19NT05USExZIiwiaWF0IjoxNzY5Njc2MzQ2fQ.Oj6veBiRUaPtWZ1yaVgTAp-q_JvCfXC8zuU42_T4rM4";
 const SMARTPING_URL     = "https://backend.api-wa.co/campaign/smartping/api/v2";
@@ -10,31 +9,11 @@ const SUPABASE_URL      = "https://oagsgovnxgiszofgytre.supabase.co";
 const SUPABASE_KEY      = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI";
 const PORT               = process.env.PORT || 3001;
 
-// ── EMAIL (SMTP) ─────────────────────────────────────────────
-const EMAIL_BASE_URL = 'https://metabase-smartping-connector.vercel.app';
-const mailTransport = nodemailer.createTransport({
-  host: 'node21.urmailtechno.com',
-  port: 587,
-  secure: false,
-  auth: { user: 'user_teratern', pass: process.env.SMTP_PASS || 'A9fK7M2qL8R5tZ' },
-  tls: { rejectUnauthorized: false },
-  // Fail fast instead of hanging forever if this network can't reach the
-  // SMTP host (common on some cloud providers that block/blackhole
-  // outbound SMTP ports) — without these, a stuck connection blocks the
-  // whole batch poller indefinitely with no error logged.
-  connectionTimeout: 15000,
-  greetingTimeout: 10000,
-  socketTimeout: 20000,
-});
-
-// Extra safety net: even with the timeouts above, wrap each send in its
-// own hard timeout so one bad connection can never freeze the poller.
-function sendMailWithTimeout(opts, ms = 25000) {
-  return Promise.race([
-    mailTransport.sendMail(opts),
-    new Promise((_, reject) => setTimeout(() => reject(new Error(`sendMail timed out after ${ms}ms`)), ms)),
-  ]);
-}
+// ── EMAIL ─────────────────────────────────────────────────────
+// Actual sending happens on Vercel (Infobip) via /api/email/send below;
+// this worker only drives batching/pacing/pause-stop. Must point at the
+// live smartping-email deployment, not a stale/old project.
+const EMAIL_BASE_URL = process.env.EMAIL_BASE_URL || 'https://smartping-email.vercel.app';
 function resolveEmailTokens(html, contact) {
   return String(html || '')
     .replace(/\{\{name\}\}/g, contact.fullname || '')
