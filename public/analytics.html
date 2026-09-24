@@ -101,9 +101,10 @@ tr:hover td{background:#fafcff;cursor:pointer}
           <th>Opened</th>
           <th>Clicked</th>
           <th>Failed</th>
+          <th>Unsub</th>
         </tr>
       </thead>
-      <tbody id="tbody"><tr><td colspan="6" class="empty"><span class="spin"></span>Loading...</td></tr></tbody>
+      <tbody id="tbody"><tr><td colspan="7" class="empty"><span class="spin"></span>Loading...</td></tr></tbody>
     </table>
   </div>
 
@@ -173,8 +174,11 @@ async function load() {
     if (page.length < PAGE) break;
   }
 
+  const unsubR = await fetch(`${SB}/rest/v1/email_unsubscribes?select=email`, {headers:sbH});
+  const unsubSet = new Set((await unsubR.json()).map(u=>u.email?.toLowerCase()));
+
   if (!Array.isArray(rows)||!rows.length) {
-    document.getElementById('tbody').innerHTML='<tr><td colspan="6" class="empty">No campaigns sent yet</td></tr>';
+    document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="empty">No campaigns sent yet</td></tr>';
     return;
   }
 
@@ -183,11 +187,12 @@ async function load() {
   rows.forEach(r=>{
     const date = r.sent_at?.split('T')[0]||'';
     const key = `${r.draft_id}__${date}`;
-    if (!groups[key]) groups[key]={draft_id:r.draft_id,date,sent:0,opened:0,clicked:0,failed:0,rows:[]};
+    if (!groups[key]) groups[key]={draft_id:r.draft_id,date,sent:0,opened:0,clicked:0,failed:0,unsub:0,rows:[]};
     groups[key].sent++;
     if (r.status==='failed') groups[key].failed++;
     if (r.opened_at) groups[key].opened++;
     if (r.clicked_at) groups[key].clicked++;
+    if (unsubSet.has(r.email?.toLowerCase())) groups[key].unsub++;
     groups[key].rows.push(r);
   });
 
@@ -200,6 +205,7 @@ async function load() {
       <td><span class="stat green">${g.opened}</span><span class="pct">${pct(g.opened,g.sent)}</span></td>
       <td><span class="stat blue">${g.clicked}</span><span class="pct">${pct(g.clicked,g.sent)}</span></td>
       <td><span class="stat red">${g.failed}</span><span class="pct">${pct(g.failed,g.sent)}</span></td>
+      <td><span class="stat" style="color:var(--muted)">${g.unsub}</span><span class="pct">${pct(g.unsub,g.sent)}</span></td>
     </tr>
   `).join('');
 }
