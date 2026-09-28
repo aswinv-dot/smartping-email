@@ -554,7 +554,7 @@ cron.schedule('40 12 * * *', preFetchLeads, { timezone:'UTC' });
 // Fires the pool one tick per day. All the actual logic — syncing the
 // pool from Metabase (webinar attended), who's due, sending — lives in
 // /api/email/automation/run on Vercel; this is just the daily alarm
-// clock. 8:00 PM IST (14:30 UTC).
+// clock. 12:00 PM IST (06:30 UTC).
 async function runEmailAutomation() {
   log('Email automation: firing daily tick...');
   try {
@@ -565,7 +565,7 @@ async function runEmailAutomation() {
     log(`Email automation tick failed: ${e.message}`);
   }
 }
-cron.schedule('30 14 * * *', runEmailAutomation, { timezone: 'UTC' });
+cron.schedule('30 6 * * *', runEmailAutomation, { timezone: 'UTC' });
 
 // ── POLLER (every 5 min, 17:00–22:00 IST only) ────────────────
 const firedSlots = new Set();
