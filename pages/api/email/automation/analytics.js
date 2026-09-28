@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     for (;;) {
       const { data, error } = await sb
         .from('email_sends')
-        .select('automation_step, status, delivered_at, opened_at, clicked_at')
+        .select('automation_step, status, sent_at, opened_at, clicked_at')
         .eq('source', 'automation')
         .range(from, from + PAGE - 1);
       if (error) throw error;
@@ -44,8 +44,12 @@ export default async function handler(req, res) {
       if (!byStep.has(step)) byStep.set(step, { sent: 0, failed: 0, delivered: 0, opened: 0, clicked: 0 });
       const bucket = byStep.get(step);
       if (s.status === 'failed') bucket.failed++;
-      else bucket.sent++;
-      if (s.delivered_at) bucket.delivered++;
+      else {
+        bucket.sent++;
+        // No separate "delivered" timestamp exists in this schema — a row
+        // that isn't 'failed' and has a sent_at is treated as delivered.
+        if (s.sent_at) bucket.delivered++;
+      }
       if (s.opened_at) bucket.opened++;
       if (s.clicked_at) bucket.clicked++;
     }
