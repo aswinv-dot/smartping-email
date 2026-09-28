@@ -131,7 +131,6 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px">
       <div style="font-size:12px;color:var(--muted);font-weight:600" id="pool-count">0 contacts</div>
-      <button class="btn-danger" onclick="clearPool()">Clear entire pool</button>
     </div>
     <div class="table-wrap">
       <table>
@@ -262,10 +261,6 @@ async function loadPool(){
 }
 async function removeFromPool(email){
   try{ await fetch(`${POOL_API}?email=${encodeURIComponent(email)}`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}
-}
-async function clearPool(){
-  if(!confirm('Remove everyone from the pool? Sequence progress is lost.')) return;
-  try{ await fetch(`${POOL_API}?all=true`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}
 }
 </script>
 </body>
