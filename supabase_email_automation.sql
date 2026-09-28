@@ -10,10 +10,15 @@ create table if not exists email_warmup_config (
   daily_start     int  not null default 20,   -- volume on day 1
   daily_increment int  not null default 10,   -- added per day since start
   daily_max       int  not null default 300,  -- hard ceiling once ramped
-  active          boolean not null default true,
+  active          boolean not null default false, -- paused by default; flip on when you're ready to ramp
   updated_at      timestamptz not null default now()
 );
 insert into email_warmup_config (id) values ('default') on conflict (id) do nothing;
+-- Paused for now (per request) — re-running this file always resets it to
+-- paused, even if the row already existed from an earlier run. Flip
+-- `active` to true from the Email Automation page whenever you want the
+-- ramp enforced again.
+update email_warmup_config set active = false, updated_at = now() where id = 'default';
 
 -- ── AUTOMATION POOL ──────────────────────────────────────────
 -- Contacts on the continuous drip. Each contact tracks its own step/timer

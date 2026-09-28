@@ -73,8 +73,10 @@ export default async function handler(req, res) {
     let warmupCapped = false;
     if (!isTest) {
       const warmup = await getTodayWarmupStatus();
-      remainingQuota = warmup.remaining;
-      if (remainingQuota <= 0) warmupCapped = true;
+      if (!warmup.unlimited) {
+        remainingQuota = warmup.remaining;
+        if (remainingQuota <= 0) warmupCapped = true;
+      }
     }
 
     let sent = 0, failed = 0, skipped = 0, already = 0, capped = 0;

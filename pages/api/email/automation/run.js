@@ -14,6 +14,14 @@ function resolveTokens(html, contact) {
     .replace(/\{\{mobile\}\}/g, contact.mobile || '');
 }
 
+// Hard ceiling per invocation regardless of warmup state, so a large pool
+// (or warmup paused = unlimited) can't try to push thousands of sends
+// through one synchronous serverless call and hit its timeout. This is
+// independent of the warmup cap — it's a request-shape safety net, not a
+// sending-volume policy. If more than this many are due, the rest stay
+// due and are picked up on the next tick (next day, or a manual Run Now).
+const MAX_PER_TICK = 300;
+
 // One tick of the automation engine. Called once a day by the Railway
 // cron (see cron/index.js) and also by the "Run Now" button on the
 // automation page for manual testing. Idempotent within a UTC day-ish —
@@ -41,7 +49,7 @@ export default async function handler(req, res) {
     if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured' });
 
     const warmup = await getTodayWarmupStatus();
-    if (warmup.remaining <= 0) {
+    if (!warmup.unlimited && warmup.remaining <= 0) {
       return res.status(200).json({ success: true, skipped: true, reason: 'daily warmup cap reached', warmup });
     }
 
@@ -54,8 +62,9 @@ export default async function handler(req, res) {
     const now = Date.now();
     const due = [];
     const toComplete = [];
+    const toRemove = []; // unsubscribed mid-sequence — distinct from finishing the sequence
     for (const contact of pool) {
-      if (unsubSet.has(contact.email.toLowerCase())) { toComplete.push(contact.id); continue; }
+      if (unsubSet.has(contact.email.toLowerCase())) { toRemove.push(contact.id); continue; }
 
       const nextStepNum = contact.current_step + 1;
       const step = sequence.find(s => s.step_number === nextStepNum);
@@ -69,9 +78,10 @@ export default async function handler(req, res) {
       if (now >= dueAt) due.push({ contact, step });
     }
 
-    if (toComplete.length) {
-      await sb.from('email_automation_pool').update({ status: 'completed', updated_at: new Date().toISOString() }).in('id', toComplete);
-    }
+    await Promise.all([
+      toComplete.length ? sb.from('email_automation_pool').update({ status: 'completed', updated_at: new Date().toISOString() }).in('id', toComplete) : null,
+      toRemove.length ? sb.from('email_automation_pool').update({ status: 'removed', updated_at: new Date().toISOString() }).in('id', toRemove) : null,
+    ]);
 
     // Oldest-waiting-first so nobody gets starved by contacts that just joined.
     due.sort((a, b) => new Date(a.contact.last_sent_at || a.contact.added_at) - new Date(b.contact.last_sent_at || b.contact.added_at));
@@ -79,7 +89,8 @@ export default async function handler(req, res) {
     const baseUrl = process.env.PUBLIC_BASE_URL || 'https://terratern-email-infobip.vercel.app';
     const notifyUrl = `${baseUrl}/api/email/webhook-infobip`;
 
-    let sent = 0, failed = 0, remaining = warmup.remaining;
+    let sent = 0, failed = 0;
+    let remaining = warmup.unlimited ? MAX_PER_TICK : Math.min(warmup.remaining, MAX_PER_TICK);
     const sendLogs = [];
     const poolUpdates = [];
 
@@ -105,10 +116,10 @@ export default async function handler(req, res) {
     }
 
     if (sendLogs.length) await sb.from('email_sends').insert(sendLogs);
-    for (const u of poolUpdates) {
+    await Promise.all(poolUpdates.map(u => {
       const { id, ...patch } = u;
-      await sb.from('email_automation_pool').update(patch).eq('id', id);
-    }
+      return sb.from('email_automation_pool').update(patch).eq('id', id);
+    }));
     if (sendLogs.some(l => l.status === 'sent')) {
       await Promise.all(sendLogs.filter(l => l.status === 'sent').map(l =>
         sb.rpc('bump_email_contact_stats', { p_email: l.email, p_sent: 1 }).then(() => {}).catch(() => {})
@@ -118,8 +129,8 @@ export default async function handler(req, res) {
     await sb.from('email_automation_state').update({ last_run_at: new Date().toISOString() }).eq('id', 'default');
 
     return res.status(200).json({
-      success: true, due: due.length, sent, failed, completed: toComplete.length,
-      warmup_remaining_after: remaining, capped: remaining <= 0 && due.length > sent,
+      success: true, due: due.length, sent, failed, completed: toComplete.length, removed: toRemove.length,
+      warmup_remaining_after: warmup.unlimited ? null : remaining, capped: remaining <= 0 && due.length > sent,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });

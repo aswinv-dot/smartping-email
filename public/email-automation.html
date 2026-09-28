@@ -235,13 +235,20 @@ async function loadWarmup(){
     document.getElementById('w-max').value = d.config.daily_max;
     document.getElementById('w-active').checked = d.config.active !== false;
 
-    const pct = d.limit ? Math.min(100, Math.round((d.sent/d.limit)*100)) : 0;
-    document.getElementById('w-gauge-fill').style.width = pct+'%';
-    document.getElementById('w-gauge-fill').className = 'gauge-fill'+(d.sent>=d.limit?' over':'');
-    document.getElementById('w-gauge-label').textContent = `${d.sent} sent / ${d.limit} today's limit`;
-    document.getElementById('w-gauge-hint').textContent = d.remaining>0
-      ? `You can send ${d.remaining} more emails today.`
-      : `Today's warmup budget is used up — sending resumes tomorrow.`;
+    if(d.unlimited){
+      document.getElementById('w-gauge-fill').style.width = '100%';
+      document.getElementById('w-gauge-fill').className = 'gauge-fill';
+      document.getElementById('w-gauge-label').textContent = `${d.sent} sent today · warmup PAUSED`;
+      document.getElementById('w-gauge-hint').textContent = `No daily cap is being enforced right now. Turn "Warmup ramp active" back on to resume gating.`;
+    } else {
+      const pct = d.limit ? Math.min(100, Math.round((d.sent/d.limit)*100)) : 0;
+      document.getElementById('w-gauge-fill').style.width = pct+'%';
+      document.getElementById('w-gauge-fill').className = 'gauge-fill'+(d.sent>=d.limit?' over':'');
+      document.getElementById('w-gauge-label').textContent = `${d.sent} sent / ${d.limit} today's limit`;
+      document.getElementById('w-gauge-hint').textContent = d.remaining>0
+        ? `You can send ${d.remaining} more emails today.`
+        : `Today's warmup budget is used up — sending resumes tomorrow.`;
+    }
   }catch(e){ document.getElementById('w-gauge-label').textContent='Failed to load'; }
 }
 async function saveWarmup(){
