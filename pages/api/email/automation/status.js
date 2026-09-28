@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { getTodayWarmupStatus } from '../../../../lib/warmup';
 
 const sb = createClient(
   'https://oagsgovnxgiszofgytre.supabase.co',
@@ -7,15 +6,14 @@ const sb = createClient(
 );
 
 // One-shot GET for the automation page: engine state, sequence, pool
-// counts, and today's warmup status, all in one call.
+// counts, all in one call.
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const [{ data: state }, { data: sequence }, { data: pool }, warmup, { count: sentTodayAuto }] = await Promise.all([
+    const [{ data: state }, { data: sequence }, { data: pool }, { count: sentTodayAuto }] = await Promise.all([
       sb.from('email_automation_state').select('*').eq('id', 'default').single(),
       sb.from('email_automation_sequence').select('*, email_drafts(id,subject,from_name)').order('step_number', { ascending: true }),
       sb.from('email_automation_pool').select('id,status,current_step'),
-      getTodayWarmupStatus(),
       sb.from('email_sends').select('id', { count: 'exact', head: true }).eq('source', 'automation').eq('status', 'sent')
         .gte('created_at', `${new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10)}T00:00:00Z`),
     ]);
@@ -32,7 +30,6 @@ export default async function handler(req, res) {
       sequence: sequence || [],
       pool_counts: counts,
       pool_by_step: byStep,
-      warmup,
       sent_today_by_automation: sentTodayAuto || 0,
     });
   } catch (e) {

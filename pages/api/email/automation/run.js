@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendInfobipEmail } from '../../../../lib/infobip';
-import { getTodayWarmupStatus } from '../../../../lib/warmup';
 
 const sb = createClient(
   'https://oagsgovnxgiszofgytre.supabase.co',
@@ -14,12 +13,11 @@ function resolveTokens(html, contact) {
     .replace(/\{\{mobile\}\}/g, contact.mobile || '');
 }
 
-// Hard ceiling per invocation regardless of warmup state, so a large pool
-// (or warmup paused = unlimited) can't try to push thousands of sends
-// through one synchronous serverless call and hit its timeout. This is
-// independent of the warmup cap — it's a request-shape safety net, not a
-// sending-volume policy. If more than this many are due, the rest stay
-// due and are picked up on the next tick (next day, or a manual Run Now).
+// Hard ceiling per invocation, so a large pool can't try to push
+// thousands of sends through one synchronous serverless call and hit its
+// timeout. Purely a request-shape safety net. If more than this many are
+// due, the rest stay due and are picked up on the next tick (next day,
+// or a manual Run Now).
 const MAX_PER_TICK = 300;
 
 // One tick of the automation engine. Called once a day by the Railway
@@ -32,9 +30,8 @@ const MAX_PER_TICK = 300;
 // next sequence step (never sent -> due for step 1 immediately; sent
 // step N -> due for step N+1 once `delay_days` of step N has passed
 // since last_sent_at). Due contacts are sorted oldest-waiting-first and
-// sent up to whatever's left of today's warmup budget; anyone who
-// doesn't fit stays due and is picked up on the next run once the
-// budget resets.
+// sent up to MAX_PER_TICK; anyone who doesn't fit stays due and is
+// picked up on the next tick.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -47,11 +44,6 @@ export default async function handler(req, res) {
       .select('*, email_drafts(id,subject,body,from_name)').order('step_number', { ascending: true });
     if (seqErr) throw seqErr;
     if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured' });
-
-    const warmup = await getTodayWarmupStatus();
-    if (!warmup.unlimited && warmup.remaining <= 0) {
-      return res.status(200).json({ success: true, skipped: true, reason: 'daily warmup cap reached', warmup });
-    }
 
     const { data: pool, error: poolErr } = await sb.from('email_automation_pool').select('*').eq('status', 'active');
     if (poolErr) throw poolErr;
@@ -90,7 +82,7 @@ export default async function handler(req, res) {
     const notifyUrl = `${baseUrl}/api/email/webhook-infobip`;
 
     let sent = 0, failed = 0;
-    let remaining = warmup.unlimited ? MAX_PER_TICK : Math.min(warmup.remaining, MAX_PER_TICK);
+    let remaining = MAX_PER_TICK;
     const sendLogs = [];
     const poolUpdates = [];
 
@@ -130,7 +122,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true, due: due.length, sent, failed, completed: toComplete.length, removed: toRemove.length,
-      warmup_remaining_after: warmup.unlimited ? null : remaining, capped: remaining <= 0 && due.length > sent,
+      capped: remaining <= 0 && due.length > sent,
     });
   } catch (e) {
     return res.status(500).json({ error: e.message });

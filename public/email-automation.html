@@ -53,10 +53,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .stat-num{font-size:26px;font-weight:800;color:var(--navy)}
 .stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:4px}
 
-.gauge-wrap{background:#f8faff;border:1.5px solid var(--sky);border-radius:8px;padding:16px 20px;margin-top:14px}
-.gauge-bar{background:#e8e8f0;border-radius:20px;height:14px;overflow:hidden;margin:10px 0}
-.gauge-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--navy));border-radius:20px;transition:width .4s}
-.gauge-fill.over{background:var(--red)}
 
 .step-row{display:grid;grid-template-columns:32px 1fr 110px 32px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f4fb}
 .step-num{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -90,50 +86,6 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
 
 <div class="wrap">
 
-  <!-- WARMUP -->
-  <div class="card">
-    <div class="sec-label">Domain Warmup</div>
-    <div class="grid4">
-      <div class="form-group">
-        <label class="form-label">Warmup start date</label>
-        <input class="form-input" type="date" id="w-start"/>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Day 1 volume</label>
-        <input class="form-input" type="number" id="w-start-vol" min="1"/>
-        <div class="form-hint">Emails allowed on the first day</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Daily increment</label>
-        <input class="form-input" type="number" id="w-increment" min="0"/>
-        <div class="form-hint">Added to the cap each day</div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Max daily cap</label>
-        <input class="form-input" type="number" id="w-max" min="1"/>
-        <div class="form-hint">Ceiling once fully ramped</div>
-      </div>
-    </div>
-    <div class="btn-row">
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600">
-        <input type="checkbox" id="w-active" checked/> Warmup ramp active (unchecked = always allow up to max)
-      </label>
-    </div>
-    <div class="btn-row">
-      <button class="btn" onclick="saveWarmup()">Save Warmup Settings</button>
-      <span class="status-msg" id="w-msg"></span>
-    </div>
-
-    <div class="gauge-wrap">
-      <div style="display:flex;justify-content:space-between;align-items:baseline">
-        <div style="font-size:12px;color:var(--muted);font-weight:600">TODAY'S SENDING BUDGET</div>
-        <div style="font-size:12px;color:var(--navy);font-weight:700" id="w-gauge-label">Loading...</div>
-      </div>
-      <div class="gauge-bar"><div class="gauge-fill" id="w-gauge-fill" style="width:0%"></div></div>
-      <div class="form-hint" id="w-gauge-hint"></div>
-    </div>
-  </div>
-
   <!-- SEQUENCE -->
   <div class="card">
     <div class="sec-label">Drip Sequence — one step sent to the whole pool per day it's due</div>
@@ -164,7 +116,7 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
       <button class="btn-ghost" onclick="runNow()">Run Now (manual tick)</button>
       <span class="status-msg" id="engine-msg"></span>
     </div>
-    <div class="form-hint" style="margin-top:10px">Once running, the engine ticks automatically once a day (9:00 AM IST) — every pool contact due their next step gets it, up to today's warmup budget. Stopped ticks are skipped.</div>
+    <div class="form-hint" style="margin-top:10px">Once running, the engine ticks automatically once a day (9:00 AM IST) — every pool contact due their next step gets it (up to 300 sends per tick as a safety cap). Stopped ticks are skipped.</div>
   </div>
 
   <!-- POOL -->
@@ -204,7 +156,6 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
 
 <script>
 const DRAFTS_API = '/api/email/drafts';
-const WARMUP_API = '/api/email/warmup';
 const POOL_API = '/api/email/automation/pool';
 const SEQ_API = '/api/email/automation/sequence';
 const CTRL_API = '/api/email/automation/control';
@@ -214,7 +165,7 @@ const STATUS_API = '/api/email/automation/status';
 let drafts = [];
 let sequenceSteps = []; // [{draft_id, delay_days}]
 
-window.onload = () => { loadDrafts(); loadWarmup(); loadStatus(); loadPool(); };
+window.onload = () => { loadDrafts(); loadStatus(); loadPool(); };
 
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function flash(id, txt, type){ const el=document.getElementById(id); el.textContent=txt; el.className='status-msg '+type; setTimeout(()=>el.textContent='',3500); }
@@ -222,50 +173,6 @@ function flash(id, txt, type){ const el=document.getElementById(id); el.textCont
 // ── DRAFTS ───────────────────────────────────────────────────
 async function loadDrafts(){
   try{ const r=await fetch(DRAFTS_API); const d=await r.json(); drafts=d.drafts||[]; }catch(e){ drafts=[]; }
-}
-
-// ── WARMUP ───────────────────────────────────────────────────
-async function loadWarmup(){
-  try{
-    const r = await fetch(WARMUP_API);
-    const d = await r.json();
-    document.getElementById('w-start').value = d.config.start_date;
-    document.getElementById('w-start-vol').value = d.config.daily_start;
-    document.getElementById('w-increment').value = d.config.daily_increment;
-    document.getElementById('w-max').value = d.config.daily_max;
-    document.getElementById('w-active').checked = d.config.active !== false;
-
-    if(d.unlimited){
-      document.getElementById('w-gauge-fill').style.width = '100%';
-      document.getElementById('w-gauge-fill').className = 'gauge-fill';
-      document.getElementById('w-gauge-label').textContent = `${d.sent} sent today · warmup PAUSED`;
-      document.getElementById('w-gauge-hint').textContent = `No daily cap is being enforced right now. Turn "Warmup ramp active" back on to resume gating.`;
-    } else {
-      const pct = d.limit ? Math.min(100, Math.round((d.sent/d.limit)*100)) : 0;
-      document.getElementById('w-gauge-fill').style.width = pct+'%';
-      document.getElementById('w-gauge-fill').className = 'gauge-fill'+(d.sent>=d.limit?' over':'');
-      document.getElementById('w-gauge-label').textContent = `${d.sent} sent / ${d.limit} today's limit`;
-      document.getElementById('w-gauge-hint').textContent = d.remaining>0
-        ? `You can send ${d.remaining} more emails today.`
-        : `Today's warmup budget is used up — sending resumes tomorrow.`;
-    }
-  }catch(e){ document.getElementById('w-gauge-label').textContent='Failed to load'; }
-}
-async function saveWarmup(){
-  try{
-    const body = {
-      start_date: document.getElementById('w-start').value,
-      daily_start: document.getElementById('w-start-vol').value,
-      daily_increment: document.getElementById('w-increment').value,
-      daily_max: document.getElementById('w-max').value,
-      active: document.getElementById('w-active').checked,
-    };
-    const r = await fetch(WARMUP_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
-    const d = await r.json();
-    if(d.error) throw new Error(d.error);
-    flash('w-msg','✓ Saved','ok');
-    loadWarmup();
-  }catch(e){ flash('w-msg','Failed: '+e.message,'err'); }
 }
 
 // ── SEQUENCE ─────────────────────────────────────────────────
@@ -340,7 +247,7 @@ async function runNow(){
     const d = await r.json();
     if(d.error) throw new Error(d.error);
     flash('engine-msg', d.skipped ? `Skipped: ${d.reason}` : `✓ Sent ${d.sent}, completed ${d.completed}`, 'ok');
-    loadStatus(); loadWarmup(); loadPool();
+    loadStatus(); loadPool();
   }catch(e){ flash('engine-msg','Failed: '+e.message,'err'); }
 }
 
