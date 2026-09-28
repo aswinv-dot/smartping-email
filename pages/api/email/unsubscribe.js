@@ -4,8 +4,16 @@ const sb = createClient('https://oagsgovnxgiszofgytre.supabase.co','eyJhbGciOiJI
 export default async function handler(req, res) {
   const { email } = req.query;
   if (email) {
-    await sb.from('email_unsubscribes').upsert([{ email, unsubscribed_at: new Date().toISOString() }]);
-    await sb.rpc('mark_email_unsubscribed', { p_email: email }).catch(() => {});
+    try {
+      await sb.from('email_unsubscribes').upsert([{ email, unsubscribed_at: new Date().toISOString() }]);
+    } catch (e) {
+      console.error('unsubscribe upsert failed:', e.message);
+    }
+    try {
+      await sb.rpc('mark_email_unsubscribed', { p_email: email });
+    } catch (e) {
+      console.error('mark_email_unsubscribed rpc failed:', e.message);
+    }
   }
   res.setHeader('Content-Type','text/html');
   res.end(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Unsubscribed</title>
