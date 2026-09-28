@@ -6,6 +6,11 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI'
 );
 
+// Same public Metabase card contacts.js/contacts.html already sync from —
+// per request, the pool is auto-populated from this directly rather than
+// hand-picked. Filtered here to rows where webinar_attended = 'Yes'.
+const METABASE_EMAIL_URL = 'https://metabase.terratern.com/api/public/card/d14792bd-69e5-4d64-b693-1f70153724d0/query/json';
+
 function resolveTokens(html, contact) {
   return String(html || '')
     .replace(/\{\{name\}\}/g, contact.fullname || '')
@@ -20,30 +25,76 @@ function resolveTokens(html, contact) {
 // or a manual Run Now).
 const MAX_PER_TICK = 300;
 
+// Pulls today's webinar-attended leads straight from Metabase and adds
+// any NEW ones (by email) to the pool. Existing pool rows — whatever
+// their status (active mid-sequence, completed, removed) — are left
+// untouched via on_conflict do-nothing, so someone who attended a
+// webinar last week and already got step 1 never gets re-added/reset
+// just because they still show up in today's query. This is what makes
+// "yesterday 500 attended -> got email 1; today the query returns 900 ->
+// only the 400 new ones get email 1" work automatically, every day,
+// with no manual selection.
+async function syncPoolFromMetabase() {
+  const res = await fetch(METABASE_EMAIL_URL, { headers: { 'Accept-Encoding': 'identity' } });
+  const rows = await res.json();
+  if (!Array.isArray(rows)) throw new Error('Metabase returned an unexpected response');
+
+  const attended = rows.filter(r => String(r.webinar_attended || '').trim().toLowerCase() === 'yes');
+  const candidates = attended
+    .map(r => ({ email: String(r.email || '').toLowerCase().trim(), fullname: r.fullname || r.name || '', mobile: r.mobile || '' }))
+    .filter(c => c.email);
+
+  // Dedup within this batch (Metabase can repeat a lead across rows).
+  const byEmail = new Map(candidates.map(c => [c.email, c]));
+  const unique = [...byEmail.values()];
+
+  let added = 0;
+  if (unique.length) {
+    const { data: existing } = await sb.from('email_automation_pool').select('email');
+    const existingSet = new Set((existing || []).map(e => e.email.toLowerCase()));
+    const toInsert = unique.filter(c => !existingSet.has(c.email));
+    if (toInsert.length) {
+      const { error } = await sb.from('email_automation_pool').upsert(toInsert, { onConflict: 'email', ignoreDuplicates: true });
+      if (error) throw error;
+      added = toInsert.length;
+    }
+  }
+
+  return { matched: unique.length, added };
+}
+
 // One tick of the automation engine. Called once a day by the Railway
-// cron (see cron/index.js) and also by the "Run Now" button on the
-// automation page for manual testing. Idempotent within a UTC day-ish —
-// running it twice in the same day just finds nothing newly due the
-// second time, since last_sent_at/current_step already moved on.
+// cron (see cron/index.js, 8PM IST) and also by the "Run Now" button on
+// the automation page for manual testing. Idempotent within a day —
+// running it twice just finds nothing newly due/newly matched the
+// second time.
 //
-// For every active pool contact, works out whether they're due their
-// next sequence step (never sent -> due for step 1 immediately; sent
-// step N -> due for step N+1 once `delay_days` of step N has passed
-// since last_sent_at). Due contacts are sorted oldest-waiting-first and
-// sent up to MAX_PER_TICK; anyone who doesn't fit stays due and is
-// picked up on the next tick.
+// Two jobs, always in this order:
+//  1. Sync the pool from Metabase (webinar_attended='Yes') — this part
+//     always runs, even if the engine is paused/stopped, so the pool
+//     count on the page stays live regardless of whether sending is on.
+//  2. If the engine is 'running', work out who's due their next
+//     sequence step (never sent -> due for step 1 immediately; sent
+//     step N -> due for step N+1 once `delay_days` of step N has passed
+//     since last_sent_at) and send, up to MAX_PER_TICK.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
+    const sync = await syncPoolFromMetabase();
+
     const { data: state } = await sb.from('email_automation_state').select('*').eq('id', 'default').single();
+    await sb.from('email_automation_state').update({
+      last_sync_at: new Date().toISOString(), last_sync_matched: sync.matched, last_sync_added: sync.added,
+    }).eq('id', 'default');
+
     if (!state || state.status !== 'running') {
-      return res.status(200).json({ success: true, skipped: true, reason: `engine is ${state?.status || 'not configured'}` });
+      return res.status(200).json({ success: true, skipped: true, reason: `engine is ${state?.status || 'not configured'}`, sync });
     }
 
     const { data: sequence, error: seqErr } = await sb.from('email_automation_sequence')
       .select('*, email_drafts(id,subject,body,from_name)').order('step_number', { ascending: true });
     if (seqErr) throw seqErr;
-    if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured' });
+    if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured', sync });
 
     const { data: pool, error: poolErr } = await sb.from('email_automation_pool').select('*').eq('status', 'active');
     if (poolErr) throw poolErr;
@@ -121,7 +172,7 @@ export default async function handler(req, res) {
     await sb.from('email_automation_state').update({ last_run_at: new Date().toISOString() }).eq('id', 'default');
 
     return res.status(200).json({
-      success: true, due: due.length, sent, failed, completed: toComplete.length, removed: toRemove.length,
+      success: true, sync, due: due.length, sent, failed, completed: toComplete.length, removed: toRemove.length,
       capped: remaining <= 0 && due.length > sent,
     });
   } catch (e) {
