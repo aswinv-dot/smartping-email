@@ -68,7 +68,7 @@ async function syncPoolFromMetabase() {
 //  - phase 'sync' — 3PM IST. Pulls Metabase, adds newly-matched contacts
 //    to the pool. Always runs regardless of engine status, so the pool
 //    count on the page stays live either way. Does NOT send anything.
-//  - phase 'send' — 8PM IST (within the requested 5pm-6am sending
+//  - phase 'send' — normally 8PM IST (within the requested 5pm-6am sending
 //    window). Only runs if the engine is 'running': works out who's due
 //    their next sequence step (never sent -> due for step 1 immediately;
 //    sent step N -> due for step N+1 once `delay_days` of step N has
