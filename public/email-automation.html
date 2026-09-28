@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Email Automation — TerraTern</title>
+<link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#00215C;--blue:#255CC1;--sky:#9acbfd;--yellow:#f1c819;
+  --bg:#f4f7fc;--surface:#fff;--border:#dde6f5;
+  --text:#00215C;--muted:#5a7ab5;--muted2:#8aa4cc;
+  --green:#1a9e5c;--red:#e03e3e;--amber:#b07d00;
+  --font:'Inter',system-ui,sans-serif;--radius:8px;--shadow:0 1px 4px rgba(0,33,92,.08);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding-bottom:80px}
+.header{background:var(--navy);padding:0 32px;height:56px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(0,33,92,.15)}
+.logo img{height:28px;width:auto;vertical-align:middle}
+.sub{font-size:11px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;flex:1}
+.tab-nav{display:flex;align-items:center;gap:4px}
+.tab-nav a{font-size:12px;font-weight:600;color:rgba(154,203,253,.7);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all .15s;white-space:nowrap}
+.tab-nav a:hover{color:#fff}
+.tab-nav a.active{background:#fff;color:var(--navy)}
+
+.wrap{max-width:1200px;margin:0 auto;padding:24px 32px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:20px}
+.sec-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.grid2,.grid4{grid-template-columns:1fr}}
+
+.form-group{margin-bottom:14px}
+.form-label{font-size:11px;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;display:block;font-weight:600;text-transform:uppercase}
+.form-input,.form-select{width:100%;border:1.5px solid var(--border);border-radius:6px;padding:9px 12px;font-family:var(--font);font-size:13px;color:var(--text);background:#fff;outline:none}
+.form-input:focus,.form-select:focus{border-color:var(--blue)}
+.form-hint{font-size:11px;color:var(--muted2);margin-top:4px}
+
+.btn{background:var(--blue);color:#fff;border:none;padding:10px 22px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:600;border-radius:6px}
+.btn:hover{background:var(--navy)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--blue);border:1.5px solid var(--blue);padding:9px 16px;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px}
+.btn-ghost:hover{background:var(--blue);color:#fff}
+.btn-danger{background:transparent;color:var(--red);border:1.5px solid #fca5a5;padding:6px 12px;cursor:pointer;font-family:var(--font);font-size:11px;border-radius:6px}
+.btn-danger:hover{background:#fdecea}
+.btn-green{background:var(--green);color:#fff;border:none;padding:10px 22px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;border-radius:6px}
+.btn-amber{background:var(--amber);color:#fff;border:none;padding:10px 22px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;border-radius:6px}
+.btn-row{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.status-msg{font-size:12px;font-weight:600;margin-top:8px}
+.status-msg.ok{color:var(--green)}.status-msg.err{color:var(--red)}
+
+.stat-tile{background:#f0f5ff;border:1px solid var(--border);border-radius:6px;padding:14px;text-align:center}
+.stat-num{font-size:26px;font-weight:800;color:var(--navy)}
+.stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-top:4px}
+
+.gauge-wrap{background:#f8faff;border:1.5px solid var(--sky);border-radius:8px;padding:16px 20px;margin-top:14px}
+.gauge-bar{background:#e8e8f0;border-radius:20px;height:14px;overflow:hidden;margin:10px 0}
+.gauge-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--navy));border-radius:20px;transition:width .4s}
+.gauge-fill.over{background:var(--red)}
+
+.step-row{display:grid;grid-template-columns:32px 1fr 110px 32px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f0f4fb}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px}
+.badge.running{background:#e8f5e9;color:var(--green)}
+.badge.paused{background:#fff8e1;color:var(--amber)}
+.badge.stopped{background:#f5f5f5;color:var(--muted2)}
+
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:8px 10px;background:#e8f0ff;color:var(--navy);font-size:10px;letter-spacing:1px;text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid #f0f4fb;color:var(--muted)}
+.table-wrap{max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:6px}
+.empty-box{padding:32px;text-align:center;color:var(--muted2);font-size:12px}
+
+textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-size:12px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/></div>
+  <div class="sub">Email Automation</div>
+  <nav class="tab-nav">
+    <a href="/home.html">🏠 Home</a>
+    <a href="/email-automation.html" class="active">🔁 Email Automation</a>
+    <a href="/campaigns.html">📋 Campaigns</a>
+    <a href="/automation.html">⚙️ WhatsApp Automation</a>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <!-- WARMUP -->
+  <div class="card">
+    <div class="sec-label">Domain Warmup</div>
+    <div class="grid4">
+      <div class="form-group">
+        <label class="form-label">Warmup start date</label>
+        <input class="form-input" type="date" id="w-start"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Day 1 volume</label>
+        <input class="form-input" type="number" id="w-start-vol" min="1"/>
+        <div class="form-hint">Emails allowed on the first day</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Daily increment</label>
+        <input class="form-input" type="number" id="w-increment" min="0"/>
+        <div class="form-hint">Added to the cap each day</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Max daily cap</label>
+        <input class="form-input" type="number" id="w-max" min="1"/>
+        <div class="form-hint">Ceiling once fully ramped</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:600">
+        <input type="checkbox" id="w-active" checked/> Warmup ramp active (unchecked = always allow up to max)
+      </label>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="saveWarmup()">Save Warmup Settings</button>
+      <span class="status-msg" id="w-msg"></span>
+    </div>
+
+    <div class="gauge-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <div style="font-size:12px;color:var(--muted);font-weight:600">TODAY'S SENDING BUDGET</div>
+        <div style="font-size:12px;color:var(--navy);font-weight:700" id="w-gauge-label">Loading...</div>
+      </div>
+      <div class="gauge-bar"><div class="gauge-fill" id="w-gauge-fill" style="width:0%"></div></div>
+      <div class="form-hint" id="w-gauge-hint"></div>
+    </div>
+  </div>
+
+  <!-- SEQUENCE -->
+  <div class="card">
+    <div class="sec-label">Drip Sequence — one step sent to the whole pool per day it's due</div>
+    <div id="seq-list"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="addStep()">+ Add Step</button>
+      <button class="btn" onclick="saveSequence()">Save Sequence</button>
+      <span class="status-msg" id="seq-msg"></span>
+    </div>
+  </div>
+
+  <!-- ENGINE CONTROLS -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div class="sec-label" style="margin-bottom:0">Engine</div>
+      <span class="badge" id="engine-badge">—</span>
+    </div>
+    <div class="grid4" style="margin-bottom:14px">
+      <div class="stat-tile"><div class="stat-num" id="stat-active">0</div><div class="stat-label">Active in pool</div></div>
+      <div class="stat-tile"><div class="stat-num" id="stat-completed">0</div><div class="stat-label">Completed</div></div>
+      <div class="stat-tile"><div class="stat-num" id="stat-sent-today">0</div><div class="stat-label">Sent today (automation)</div></div>
+      <div class="stat-tile"><div class="stat-num" id="stat-steps">0</div><div class="stat-label">Sequence steps</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-green" onclick="controlEngine('start')">▶ Start</button>
+      <button class="btn-amber" onclick="controlEngine('pause')">⏸ Pause</button>
+      <button class="btn-danger" style="padding:10px 22px;font-size:13px" onclick="controlEngine('stop')">⏹ Stop</button>
+      <button class="btn-ghost" onclick="runNow()">Run Now (manual tick)</button>
+      <span class="status-msg" id="engine-msg"></span>
+    </div>
+    <div class="form-hint" style="margin-top:10px">Once running, the engine ticks automatically once a day (9:00 AM IST) — every pool contact due their next step gets it, up to today's warmup budget. Stopped ticks are skipped.</div>
+  </div>
+
+  <!-- POOL -->
+  <div class="card">
+    <div class="sec-label">Pool</div>
+    <div class="grid2">
+      <div class="form-group">
+        <label class="form-label">Add by lead stage</label>
+        <div style="display:flex;gap:8px">
+          <input class="form-input" id="pool-stage" placeholder="e.g. MQL, or 'all'"/>
+          <button class="btn-ghost" onclick="addByStage()">Add</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Add by pasted emails (one per line)</label>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <textarea class="form-input" id="pool-emails" placeholder="a@example.com&#10;b@example.com"></textarea>
+          <button class="btn-ghost" onclick="addByEmails()">Add</button>
+        </div>
+      </div>
+    </div>
+    <span class="status-msg" id="pool-msg"></span>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px">
+      <div style="font-size:12px;color:var(--muted);font-weight:600" id="pool-count">0 contacts</div>
+      <button class="btn-danger" onclick="clearPool()">Clear entire pool</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Step</th><th>Status</th><th>Last sent</th><th></th></tr></thead>
+        <tbody id="pool-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DRAFTS_API = '/api/email/drafts';
+const WARMUP_API = '/api/email/warmup';
+const POOL_API = '/api/email/automation/pool';
+const SEQ_API = '/api/email/automation/sequence';
+const CTRL_API = '/api/email/automation/control';
+const RUN_API = '/api/email/automation/run';
+const STATUS_API = '/api/email/automation/status';
+
+let drafts = [];
+let sequenceSteps = []; // [{draft_id, delay_days}]
+
+window.onload = () => { loadDrafts(); loadWarmup(); loadStatus(); loadPool(); };
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function flash(id, txt, type){ const el=document.getElementById(id); el.textContent=txt; el.className='status-msg '+type; setTimeout(()=>el.textContent='',3500); }
+
+// ── DRAFTS ───────────────────────────────────────────────────
+async function loadDrafts(){
+  try{ const r=await fetch(DRAFTS_API); const d=await r.json(); drafts=d.drafts||[]; }catch(e){ drafts=[]; }
+}
+
+// ── WARMUP ───────────────────────────────────────────────────
+async function loadWarmup(){
+  try{
+    const r = await fetch(WARMUP_API);
+    const d = await r.json();
+    document.getElementById('w-start').value = d.config.start_date;
+    document.getElementById('w-start-vol').value = d.config.daily_start;
+    document.getElementById('w-increment').value = d.config.daily_increment;
+    document.getElementById('w-max').value = d.config.daily_max;
+    document.getElementById('w-active').checked = d.config.active !== false;
+
+    const pct = d.limit ? Math.min(100, Math.round((d.sent/d.limit)*100)) : 0;
+    document.getElementById('w-gauge-fill').style.width = pct+'%';
+    document.getElementById('w-gauge-fill').className = 'gauge-fill'+(d.sent>=d.limit?' over':'');
+    document.getElementById('w-gauge-label').textContent = `${d.sent} sent / ${d.limit} today's limit`;
+    document.getElementById('w-gauge-hint').textContent = d.remaining>0
+      ? `You can send ${d.remaining} more emails today.`
+      : `Today's warmup budget is used up — sending resumes tomorrow.`;
+  }catch(e){ document.getElementById('w-gauge-label').textContent='Failed to load'; }
+}
+async function saveWarmup(){
+  try{
+    const body = {
+      start_date: document.getElementById('w-start').value,
+      daily_start: document.getElementById('w-start-vol').value,
+      daily_increment: document.getElementById('w-increment').value,
+      daily_max: document.getElementById('w-max').value,
+      active: document.getElementById('w-active').checked,
+    };
+    const r = await fetch(WARMUP_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    flash('w-msg','✓ Saved','ok');
+    loadWarmup();
+  }catch(e){ flash('w-msg','Failed: '+e.message,'err'); }
+}
+
+// ── SEQUENCE ─────────────────────────────────────────────────
+function renderSequence(){
+  document.getElementById('seq-list').innerHTML = sequenceSteps.map((s,i)=>`
+    <div class="step-row">
+      <div class="step-num">${i+1}</div>
+      <select class="form-select" onchange="sequenceSteps[${i}].draft_id=this.value">
+        <option value="">Select a draft...</option>
+        ${drafts.map(d=>`<option value="${d.id}" ${d.id===s.draft_id?'selected':''}>${esc(d.subject||'(no subject)')}</option>`).join('')}
+      </select>
+      <input class="form-input" type="number" min="1" value="${s.delay_days}" placeholder="Delay (days)" onchange="sequenceSteps[${i}].delay_days=this.value" title="Days after this step before the next is due"/>
+      <button class="btn-danger" style="padding:5px 8px" onclick="removeStep(${i})">×</button>
+    </div>`).join('') || '<div class="empty-box">No steps yet — add one below.</div>';
+  document.getElementById('stat-steps').textContent = sequenceSteps.length;
+}
+function addStep(){ sequenceSteps.push({draft_id:'', delay_days:1}); renderSequence(); }
+function removeStep(i){ sequenceSteps.splice(i,1); renderSequence(); }
+async function loadSequence(){
+  try{
+    const r = await fetch(SEQ_API); const d = await r.json();
+    sequenceSteps = (d.steps||[]).map(s=>({draft_id:s.draft_id, delay_days:s.delay_days}));
+    renderSequence();
+  }catch(e){ renderSequence(); }
+}
+async function saveSequence(){
+  const clean = sequenceSteps.filter(s=>s.draft_id);
+  if(!clean.length){ flash('seq-msg','Add at least one step with a draft selected','err'); return; }
+  try{
+    const r = await fetch(SEQ_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({steps:clean})});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    flash('seq-msg','✓ Saved','ok');
+    loadStatus();
+  }catch(e){ flash('seq-msg','Failed: '+e.message,'err'); }
+}
+
+// ── ENGINE ───────────────────────────────────────────────────
+async function loadStatus(){
+  try{
+    const r = await fetch(STATUS_API); const d = await r.json();
+    const badge = document.getElementById('engine-badge');
+    badge.textContent = (d.state.status||'stopped').toUpperCase();
+    badge.className = 'badge '+(d.state.status||'stopped');
+    document.getElementById('stat-active').textContent = d.pool_counts.active||0;
+    document.getElementById('stat-completed').textContent = d.pool_counts.completed||0;
+    document.getElementById('stat-sent-today').textContent = d.sent_today_by_automation||0;
+    document.getElementById('stat-steps').textContent = (d.sequence||[]).length;
+    if(!sequenceSteps.length && d.sequence?.length){
+      sequenceSteps = d.sequence.map(s=>({draft_id:s.draft_id, delay_days:s.delay_days}));
+      renderSequence();
+    } else if(!sequenceSteps.length) {
+      renderSequence();
+    }
+  }catch(e){}
+  if(!drafts.length) await loadDrafts();
+  if(!sequenceSteps.length) loadSequence();
+}
+async function controlEngine(action){
+  try{
+    const r = await fetch(CTRL_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action})});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    flash('engine-msg', `✓ Engine ${action}ed`, 'ok');
+    loadStatus();
+  }catch(e){ flash('engine-msg','Failed: '+e.message,'err'); }
+}
+async function runNow(){
+  flash('engine-msg','Running tick...','ok');
+  try{
+    const r = await fetch(RUN_API, {method:'POST'});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    flash('engine-msg', d.skipped ? `Skipped: ${d.reason}` : `✓ Sent ${d.sent}, completed ${d.completed}`, 'ok');
+    loadStatus(); loadWarmup(); loadPool();
+  }catch(e){ flash('engine-msg','Failed: '+e.message,'err'); }
+}
+
+// ── POOL ─────────────────────────────────────────────────────
+async function loadPool(){
+  try{
+    const r = await fetch(POOL_API); const d = await r.json();
+    document.getElementById('pool-count').textContent = `${d.counts.active||0} active · ${d.counts.completed||0} completed · ${d.total} total`;
+    const rows = (d.pool||[]).filter(p=>p.status!=='removed').slice(0,200);
+    document.getElementById('pool-tbody').innerHTML = rows.length ? rows.map(p=>`
+      <tr>
+        <td>${esc(p.email)}</td>
+        <td>${esc(p.fullname||'—')}</td>
+        <td>${p.current_step}</td>
+        <td>${esc(p.status)}</td>
+        <td>${p.last_sent_at ? new Date(p.last_sent_at).toLocaleDateString('en-IN') : '—'}</td>
+        <td><button class="btn-danger" style="padding:3px 8px" onclick="removeFromPool('${esc(p.email)}')">Remove</button></td>
+      </tr>`).join('') : '<tr><td colspan="6"><div class="empty-box">Pool is empty.</div></td></tr>';
+  }catch(e){}
+}
+async function addByStage(){
+  const stage = document.getElementById('pool-stage').value.trim();
+  if(!stage){ flash('pool-msg','Enter a stage or "all"','err'); return; }
+  try{
+    const r = await fetch(POOL_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({stage})});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    flash('pool-msg', `✓ Added ${d.added}`, 'ok');
+    document.getElementById('pool-stage').value='';
+    loadPool(); loadStatus();
+  }catch(e){ flash('pool-msg','Failed: '+e.message,'err'); }
+}
+async function addByEmails(){
+  const raw = document.getElementById('pool-emails').value;
+  const emails = raw.split(/\n|,/).map(s=>s.trim()).filter(Boolean);
+  if(!emails.length){ flash('pool-msg','Paste at least one email','err'); return; }
+  try{
+    const r = await fetch(POOL_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({emails})});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    flash('pool-msg', `✓ Added ${d.added}`, 'ok');
+    document.getElementById('pool-emails').value='';
+    loadPool(); loadStatus();
+  }catch(e){ flash('pool-msg','Failed: '+e.message,'err'); }
+}
+async function removeFromPool(email){
+  try{ await fetch(`${POOL_API}?email=${encodeURIComponent(email)}`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}
+}
+async function clearPool(){
+  if(!confirm('Remove everyone from the pool? Sequence progress is lost.')) return;
+  try{ await fetch(`${POOL_API}?all=true`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}
+}
+</script>
+</body>
+</html>

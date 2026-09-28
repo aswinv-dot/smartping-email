@@ -550,6 +550,23 @@ async function preFetchLeads() {
 // Pre-fetch at 18:10 IST (12:40 UTC)
 cron.schedule('40 12 * * *', preFetchLeads, { timezone:'UTC' });
 
+// ── EMAIL AUTOMATION ENGINE (domain-warmup drip) ───────────────
+// Fires the pool one tick per day. All the actual logic — who's due,
+// warmup cap enforcement, sending — lives in /api/email/automation/run
+// on Vercel; this is just the daily alarm clock. 09:00 IST (03:30 UTC)
+// so the day's warmup budget is used on business hours, not overnight.
+async function runEmailAutomation() {
+  log('Email automation: firing daily tick...');
+  try {
+    const res = await fetch(`${EMAIL_BASE_URL}/api/email/automation/run`, { method: 'POST' });
+    const data = await res.json();
+    log(`Email automation tick: ${JSON.stringify(data)}`);
+  } catch (e) {
+    log(`Email automation tick failed: ${e.message}`);
+  }
+}
+cron.schedule('30 3 * * *', runEmailAutomation, { timezone: 'UTC' });
+
 // ── POLLER (every 5 min, 17:00–22:00 IST only) ────────────────
 const firedSlots = new Set();
 

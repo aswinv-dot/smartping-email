@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendInfobipEmail } from '../../../lib/infobip';
+import { getTodayWarmupStatus } from '../../../lib/warmup';
 
 const sb = createClient(
   'https://oagsgovnxgiszofgytre.supabase.co',
@@ -62,12 +63,27 @@ export default async function handler(req, res) {
     const baseUrl = process.env.PUBLIC_BASE_URL || 'https://terratern-email-infobip.vercel.app';
     const notifyUrl = `${baseUrl}/api/email/webhook-infobip`;
 
-    let sent = 0, failed = 0, skipped = 0, already = 0;
+    // Domain warmup: this is the one place every send path (campaign
+    // blast, automation engine, test fires excluded) funnels through, so
+    // it's the one place the daily cap is enforced. Once the budget for
+    // today is used up, remaining contacts are left untouched (not
+    // marked failed) so the campaign/automation picks them up again once
+    // the cap resets tomorrow.
+    let remainingQuota = Infinity;
+    let warmupCapped = false;
+    if (!isTest) {
+      const warmup = await getTodayWarmupStatus();
+      remainingQuota = warmup.remaining;
+      if (remainingQuota <= 0) warmupCapped = true;
+    }
+
+    let sent = 0, failed = 0, skipped = 0, already = 0, capped = 0;
     const logs = [];
     for (const c of contacts) {
       const em = (c.email || '').toLowerCase();
       if (unsubSet.has(em)) { skipped++; continue; }
       if (sentSet.has(em)) { already++; continue; }
+      if (remainingQuota <= 0) { capped++; continue; }
       try {
         let html = resolveTokens(draft.body, c);
         html += `<br/><hr/><p style="font-size:11px;color:#999">You're receiving this email because you opted in. <a href="${baseUrl}/api/email/unsubscribe?email=${encodeURIComponent(c.email)}">Unsubscribe</a></p>`;
@@ -82,6 +98,7 @@ export default async function handler(req, res) {
 
         logs.push({ id: messageId, draft_id, email: c.email, status: 'sent', infobip_message_id: messageId });
         sent++;
+        if (!isTest) remainingQuota--;
       } catch (e) {
         logs.push({ id: `${draft_id}_${c.email}_err_${Date.now()}`, draft_id, email: c.email, status: 'failed', error: e.message });
         failed++;
@@ -97,7 +114,10 @@ export default async function handler(req, res) {
       ));
     }
 
-    return res.status(200).json({ success: true, sent, failed, skipped, already_sent: already, total: contacts.length });
+    return res.status(200).json({
+      success: true, sent, failed, skipped, already_sent: already, capped, total: contacts.length,
+      warmup_capped: warmupCapped || capped > 0,
+    });
   } catch (e) {
     return res.status(500).json({ error: e.message });
   }
