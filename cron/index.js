@@ -155,7 +155,7 @@ log('TerraTern Email Cron Service started');
 // ── EMAIL AUTOMATION ENGINE (continuous drip) ───────────────────
 // Two separate daily moments — all the actual logic lives in
 // /api/email/automation/run on Vercel; this is just the alarm clock:
-//  - 1:00 PM IST (07:30 UTC): sync the pool from Metabase
+//  - 3:00 PM IST (09:30 UTC): sync the pool from Metabase
 //    (webinar_attended='Yes'). No sending happens here.
 //  - 8:00 PM IST (14:30 UTC): send to whoever's due their next
 //    sequence step. Falls inside the requested 5pm-6am sending window.
@@ -171,7 +171,7 @@ async function runEmailAutomationPhase(phase) {
     log(`Email automation ${phase} tick failed: ${e.message}`);
   }
 }
-cron.schedule('30 7 * * *', () => runEmailAutomationPhase('sync'), { timezone: 'UTC' });
+cron.schedule('30 9 * * *', () => runEmailAutomationPhase('sync'), { timezone: 'UTC' });
 cron.schedule('30 14 * * *', () => runEmailAutomationPhase('send'), { timezone: 'UTC' });
 
-log('Service running — email campaign queue polling every 4s, automation ticks at 1PM/8PM IST');
+log('Service running — email campaign queue polling every 4s, automation ticks at 3PM/8PM IST');

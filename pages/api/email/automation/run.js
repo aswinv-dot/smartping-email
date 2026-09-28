@@ -65,7 +65,7 @@ async function syncPoolFromMetabase() {
 
 // Two separate daily moments, driven by `phase` in the POST body (see
 // cron/index.js for the schedule):
-//  - phase 'sync' — 1PM IST. Pulls Metabase, adds newly-matched contacts
+//  - phase 'sync' — 3PM IST. Pulls Metabase, adds newly-matched contacts
 //    to the pool. Always runs regardless of engine status, so the pool
 //    count on the page stays live either way. Does NOT send anything.
 //  - phase 'send' — 8PM IST (within the requested 5pm-6am sending
