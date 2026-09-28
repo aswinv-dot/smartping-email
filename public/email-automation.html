@@ -119,6 +119,18 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
     <div class="form-hint" style="margin-top:10px">Two automatic ticks a day: pool syncs from Metabase at 1:00 PM IST, sending happens at 8:00 PM IST — every pool contact due their next step gets it (up to 300 sends per tick as a safety cap). "Run Now" below does both immediately, for testing. Sending is skipped entirely while the engine is stopped/paused.</div>
   </div>
 
+  <!-- PER-STEP ANALYTICS -->
+  <div class="card">
+    <div class="sec-label">Per-Step Analytics — delivery, open &amp; click rates by sequence step</div>
+    <div class="table-wrap" style="max-height:none">
+      <table>
+        <thead><tr><th>Step</th><th>Draft</th><th>Sent</th><th>Failed</th><th>Delivered</th><th>Opened</th><th>Clicked</th><th>Delivered %</th><th>Open %</th><th>Click %</th></tr></thead>
+        <tbody id="analytics-tbody"></tbody>
+      </table>
+    </div>
+    <div class="form-hint" id="analytics-hint" style="margin-top:10px"></div>
+  </div>
+
   <!-- POOL -->
   <div class="card">
     <div class="sec-label">Pool — auto-synced from Metabase (webinar attended)</div>
@@ -149,11 +161,12 @@ const SEQ_API = '/api/email/automation/sequence';
 const CTRL_API = '/api/email/automation/control';
 const RUN_API = '/api/email/automation/run';
 const STATUS_API = '/api/email/automation/status';
+const ANALYTICS_API = '/api/email/automation/analytics';
 
 let drafts = [];
 let sequenceSteps = []; // [{draft_id, delay_days}]
 
-window.onload = () => { loadDrafts(); loadStatus(); loadPool(); };
+window.onload = () => { loadDrafts(); loadStatus(); loadPool(); loadAnalytics(); };
 
 function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function flash(id, txt, type){ const el=document.getElementById(id); el.textContent=txt; el.className='status-msg '+type; setTimeout(()=>el.textContent='',3500); }
@@ -238,8 +251,34 @@ async function runNow(){
     const d = await r.json();
     if(d.error) throw new Error(d.error);
     flash('engine-msg', d.skipped ? `Skipped: ${d.reason}` : `✓ Sent ${d.sent}, completed ${d.completed}`, 'ok');
-    loadStatus(); loadPool();
+    loadStatus(); loadPool(); loadAnalytics();
   }catch(e){ flash('engine-msg','Failed: '+e.message,'err'); }
+}
+
+// ── ANALYTICS ────────────────────────────────────────────────
+async function loadAnalytics(){
+  try{
+    const r = await fetch(ANALYTICS_API); const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    const rows = d.steps||[];
+    document.getElementById('analytics-tbody').innerHTML = rows.length ? rows.map(s=>`
+      <tr>
+        <td>${s.step_number}</td>
+        <td>${esc(s.subject)}</td>
+        <td>${s.sent}</td>
+        <td>${s.failed}</td>
+        <td>${s.delivered}</td>
+        <td>${s.opened}</td>
+        <td>${s.clicked}</td>
+        <td>${s.delivered_rate}%</td>
+        <td>${s.open_rate}%</td>
+        <td>${s.click_rate}%</td>
+      </tr>`).join('') : '<tr><td colspan="10"><div class="empty-box">No automation sends yet.</div></td></tr>';
+    const t = d.totals||{};
+    document.getElementById('analytics-hint').textContent = rows.length
+      ? `Overall: ${t.sent||0} sent · ${t.delivered_rate||0}% delivered · ${t.open_rate||0}% opened · ${t.click_rate||0}% clicked. Rates are of sends, not of the pool.`
+      : '';
+  }catch(e){}
 }
 
 // ── POOL ─────────────────────────────────────────────────────
