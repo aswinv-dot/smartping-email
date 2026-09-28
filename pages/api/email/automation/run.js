@@ -155,16 +155,24 @@ export default async function handler(req, res) {
 
         const { messageId } = await sendInfobipEmail({ from, to: contact.email, subject: draft.subject, html, notifyUrl });
 
-        sendLogs.push({ id: messageId, draft_id: draft.id, email: contact.email, status: 'sent', infobip_message_id: messageId, source: 'automation', automation_step: step.step_number });
+        // NOTE: email_sends has no infobip_message_id or error column — the
+        // insert silently failed for every automation send until this was
+        // caught, because a nonexistent column makes PostgREST reject the
+        // whole batch and the result was never checked.
+        sendLogs.push({ id: messageId, draft_id: draft.id, email: contact.email, status: 'sent', sent_at: new Date().toISOString(), source: 'automation', automation_step: step.step_number });
         poolUpdates.push({ id: contact.id, current_step: step.step_number, last_sent_at: new Date().toISOString(), updated_at: new Date().toISOString() });
         sent++; remaining--;
       } catch (e) {
-        sendLogs.push({ id: `auto_${contact.email}_err_${Date.now()}`, draft_id: draft.id, email: contact.email, status: 'failed', error: e.message, source: 'automation', automation_step: step.step_number });
+        console.error(`automation send failed for ${contact.email}:`, e.message);
+        sendLogs.push({ id: `auto_${contact.email}_err_${Date.now()}`, draft_id: draft.id, email: contact.email, status: 'failed', source: 'automation', automation_step: step.step_number });
         failed++;
       }
     }
 
-    if (sendLogs.length) await sb.from('email_sends').insert(sendLogs);
+    if (sendLogs.length) {
+      const { error: insertErr } = await sb.from('email_sends').insert(sendLogs);
+      if (insertErr) console.error('email_sends insert failed:', insertErr.message);
+    }
     await Promise.all(poolUpdates.map(u => {
       const { id, ...patch } = u;
       return sb.from('email_automation_pool').update(patch).eq('id', id);
