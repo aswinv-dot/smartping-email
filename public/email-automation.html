@@ -227,13 +227,11 @@ async function loadStatus(){
     document.getElementById('stat-mb-synced').textContent = d.state.last_sync_at ? new Date(d.state.last_sync_at).toLocaleString('en-IN') : 'Never — start the engine or hit Run Now';
     if(!sequenceSteps.length && d.sequence?.length){
       sequenceSteps = d.sequence.map(s=>({draft_id:s.draft_id, delay_days:s.delay_days}));
-      renderSequence();
-    } else if(!sequenceSteps.length) {
-      renderSequence();
     }
   }catch(e){}
-  if(!drafts.length) await loadDrafts();
-  if(!sequenceSteps.length) loadSequence();
+  if(!drafts.length) await loadDrafts(); // ensure drafts are in hand before rendering, so saved draft_ids resolve to their <option>
+  if(!sequenceSteps.length) await loadSequence();
+  renderSequence();
 }
 async function controlEngine(action){
   try{
