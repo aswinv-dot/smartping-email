@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Email Inbox — TerraTern</title>
+<link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#00215C;--blue:#255CC1;--sky:#9acbfd;--yellow:#f1c819;
+  --bg:#f4f7fc;--surface:#fff;--border:#dde6f5;
+  --text:#00215C;--muted:#5a7ab5;--muted2:#8aa4cc;
+  --green:#1a9e5c;--red:#e03e3e;--amber:#b07d00;
+  --font:'Inter',system-ui,sans-serif;--radius:8px;--shadow:0 1px 4px rgba(0,33,92,.08);
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding-bottom:40px}
+.header{background:var(--navy);padding:0 32px;height:56px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(0,33,92,.15)}
+.logo img{height:28px;width:auto;vertical-align:middle}
+.sub{font-size:11px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;flex:1}
+.tab-nav{display:flex;align-items:center;gap:4px}
+.tab-nav a{font-size:12px;font-weight:600;color:rgba(154,203,253,.7);text-decoration:none;padding:6px 14px;border-radius:20px;transition:all .15s;white-space:nowrap}
+.tab-nav a:hover{color:#fff}
+.tab-nav a.active{background:#fff;color:var(--navy)}
+
+.wrap{max-width:1200px;margin:0 auto;padding:24px 32px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:0;margin-bottom:20px;overflow:hidden}
+.sec-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.inbox-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;background:#e8f5e9;color:var(--green);margin-left:8px}
+.filter-row{display:flex;gap:8px}
+.chip{border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;cursor:pointer;font-family:var(--font)}
+.chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+.inbox-layout{display:grid;grid-template-columns:380px 1fr;min-height:480px}
+@media(max-width:900px){.inbox-layout{grid-template-columns:1fr}}
+.list{border-right:1px solid var(--border);max-height:640px;overflow-y:auto}
+.list-item{padding:14px 18px;border-bottom:1px solid #f0f4fb;cursor:pointer;transition:background .1s}
+.list-item:hover{background:#f7faff}
+.list-item.active{background:#eaf1ff}
+.list-item.unread .li-from{font-weight:800}
+.list-item.unread .li-subject{font-weight:700}
+.li-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.li-from{font-size:13px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-time{font-size:10px;color:var(--muted2);white-space:nowrap;flex-shrink:0}
+.li-subject{font-size:12px;color:var(--text);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-snippet{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-tag{display:inline-block;font-size:9px;font-weight:700;color:var(--blue);background:#eaf1ff;padding:1px 6px;border-radius:8px;margin-top:4px}
+.unread-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);display:inline-block;margin-right:6px;flex-shrink:0}
+
+.detail{padding:24px 28px}
+.detail-empty{padding:60px 24px;text-align:center;color:var(--muted2);font-size:13px}
+.detail-head{border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:16px}
+.detail-subject{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.detail-meta{font-size:12px;color:var(--muted)}
+.detail-meta b{color:var(--text)}
+.detail-body{font-size:13px;line-height:1.7;color:var(--text);white-space:pre-wrap;word-break:break-word}
+.detail-body iframe{width:100%;min-height:300px;border:1px solid var(--border);border-radius:6px}
+.btn-ghost{background:transparent;color:var(--blue);border:1.5px solid var(--blue);padding:6px 14px;cursor:pointer;font-family:var(--font);font-size:11px;font-weight:600;border-radius:6px}
+.btn-ghost:hover{background:var(--blue);color:#fff}
+.empty-box{padding:40px 20px;text-align:center;color:var(--muted2);font-size:12px}
+
+.setup-note{font-size:12px;color:var(--muted);line-height:1.7;padding:14px 20px;background:#fafcff;border-top:1px solid var(--border)}
+.setup-note code{background:#eef3fb;padding:1px 5px;border-radius:4px;font-size:11px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/></div>
+  <div class="sub">Email Inbox</div>
+  <nav class="tab-nav">
+    <a href="/home.html">🏠 Home</a>
+    <a href="/email-automation.html">🔁 Email Automation</a>
+    <a href="/campaigns.html">📋 Campaigns</a>
+    <a href="/email-inbox.html" class="active">📥 Inbox</a>
+    <a href="/automation.html">⚙️ WhatsApp Automation</a>
+  </nav>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="inbox-head">
+      <div class="sec-label">Replies to your emails<span class="pill" id="unread-pill">0 unread</span></div>
+      <div class="filter-row">
+        <button class="chip active" id="chip-all" onclick="setFilter(false)">All</button>
+        <button class="chip" id="chip-unread" onclick="setFilter(true)">Unread</button>
+      </div>
+    </div>
+    <div class="inbox-layout">
+      <div class="list" id="list"></div>
+      <div class="detail" id="detail"><div class="detail-empty">Select a reply to read it.</div></div>
+    </div>
+    <div class="setup-note">
+      This inbox fills automatically once Infobip's inbound email is configured for your sending domain: portal → <b>Channels and Numbers → Channels → Email → Inbound Email</b> → add your sending domain → add the MX record it gives you to your DNS → set the inbound action to <b>HTTP Push</b> with webhook URL <code id="webhook-url">…</code>. Until that's set up, replies won't reach this page — they'll just land wherever your sending mailbox normally receives mail.
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api/email/replies';
+let replies = [];
+let unreadOnly = false;
+let selectedId = null;
+
+document.getElementById('webhook-url').textContent = location.origin + '/api/email/webhook-infobip-inbound';
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function timeAgo(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('en-IN', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+function setFilter(unread){
+  unreadOnly = unread;
+  document.getElementById('chip-all').classList.toggle('active', !unread);
+  document.getElementById('chip-unread').classList.toggle('active', unread);
+  load();
+}
+async function load(){
+  try{
+    const r = await fetch(`${API}?unread=${unreadOnly}`);
+    const d = await r.json();
+    replies = d.replies || [];
+    document.getElementById('unread-pill').textContent = `${d.unread_count||0} unread`;
+    renderList();
+  }catch(e){}
+}
+function renderList(){
+  const list = document.getElementById('list');
+  if(!replies.length){
+    list.innerHTML = '<div class="empty-box">No replies yet.</div>';
+    return;
+  }
+  list.innerHTML = replies.map(r => `
+    <div class="list-item ${r.is_read?'':'unread'} ${r.id===selectedId?'active':''}" onclick="selectReply('${r.id}')">
+      <div class="li-top">
+        <div class="li-from">${r.is_read?'':'<span class="unread-dot"></span>'}${esc(r.from_name || r.from_email || 'Unknown sender')}</div>
+        <div class="li-time">${timeAgo(r.received_at)}</div>
+      </div>
+      <div class="li-subject">${esc(r.subject||'(no subject)')}</div>
+      <div class="li-snippet">${esc((r.body_text||'').slice(0,80))}</div>
+      ${r.matched_automation_step ? `<span class="li-tag">Reply to Step ${r.matched_automation_step}</span>` : ''}
+    </div>`).join('');
+}
+function selectReply(id){
+  selectedId = id;
+  const r = replies.find(x=>x.id===id);
+  if(!r) return;
+  renderList();
+  const detail = document.getElementById('detail');
+  detail.innerHTML = `
+    <div class="detail-head">
+      <div class="detail-subject">${esc(r.subject||'(no subject)')}</div>
+      <div class="detail-meta"><b>${esc(r.from_name||r.from_email||'Unknown')}</b> &lt;${esc(r.from_email||'')}&gt; · ${timeAgo(r.received_at)}
+        ${r.matched_automation_step ? ` · reply to automation Step ${r.matched_automation_step}` : ''}</div>
+      <div style="margin-top:10px"><button class="btn-ghost" onclick="toggleRead('${r.id}', ${!r.is_read})">${r.is_read?'Mark unread':'Mark read'}</button></div>
+    </div>
+    <div class="detail-body">${r.body_html ? `<iframe srcdoc="${esc(r.body_html)}"></iframe>` : esc(r.body_text || '(no readable body was included in the inbound payload)')}</div>`;
+  if(!r.is_read) toggleRead(r.id, true, true);
+}
+async function toggleRead(id, is_read, silent){
+  try{
+    await fetch(API, {method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id, is_read})});
+    const r = replies.find(x=>x.id===id);
+    if(r) r.is_read = is_read;
+    renderList();
+    if(!silent) selectReply(id);
+  }catch(e){}
+}
+window.onload = load;
+</script>
+</body>
+</html>
