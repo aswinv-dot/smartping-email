@@ -551,21 +551,26 @@ async function preFetchLeads() {
 cron.schedule('40 12 * * *', preFetchLeads, { timezone:'UTC' });
 
 // ── EMAIL AUTOMATION ENGINE (continuous drip) ───────────────────
-// Fires the pool one tick per day. All the actual logic — syncing the
-// pool from Metabase (webinar attended), who's due, sending — lives in
-// /api/email/automation/run on Vercel; this is just the daily alarm
-// clock. 12:00 PM IST (06:30 UTC).
-async function runEmailAutomation() {
-  log('Email automation: firing daily tick...');
+// Two separate daily moments — all the actual logic lives in
+// /api/email/automation/run on Vercel; this is just the alarm clock:
+//  - 1:00 PM IST (07:30 UTC): sync the pool from Metabase
+//    (webinar_attended='Yes'). No sending happens here.
+//  - 8:00 PM IST (14:30 UTC): send to whoever's due their next
+//    sequence step. Falls inside the requested 5pm-6am sending window.
+async function runEmailAutomationPhase(phase) {
+  log(`Email automation: firing ${phase} tick...`);
   try {
-    const res = await fetch(`${EMAIL_BASE_URL}/api/email/automation/run`, { method: 'POST' });
+    const res = await fetch(`${EMAIL_BASE_URL}/api/email/automation/run`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phase }),
+    });
     const data = await res.json();
-    log(`Email automation tick: ${JSON.stringify(data)}`);
+    log(`Email automation ${phase} tick: ${JSON.stringify(data)}`);
   } catch (e) {
-    log(`Email automation tick failed: ${e.message}`);
+    log(`Email automation ${phase} tick failed: ${e.message}`);
   }
 }
-cron.schedule('30 6 * * *', runEmailAutomation, { timezone: 'UTC' });
+cron.schedule('30 7 * * *', () => runEmailAutomationPhase('sync'), { timezone: 'UTC' });
+cron.schedule('30 14 * * *', () => runEmailAutomationPhase('send'), { timezone: 'UTC' });
 
 // ── POLLER (every 5 min, 17:00–22:00 IST only) ────────────────
 const firedSlots = new Set();

@@ -63,38 +63,44 @@ async function syncPoolFromMetabase() {
   return { matched: unique.length, added };
 }
 
-// One tick of the automation engine. Called once a day by the Railway
-// cron (see cron/index.js, 8PM IST) and also by the "Run Now" button on
-// the automation page for manual testing. Idempotent within a day —
-// running it twice just finds nothing newly due/newly matched the
-// second time.
-//
-// Two jobs, always in this order:
-//  1. Sync the pool from Metabase (webinar_attended='Yes') — this part
-//     always runs, even if the engine is paused/stopped, so the pool
-//     count on the page stays live regardless of whether sending is on.
-//  2. If the engine is 'running', work out who's due their next
-//     sequence step (never sent -> due for step 1 immediately; sent
-//     step N -> due for step N+1 once `delay_days` of step N has passed
-//     since last_sent_at) and send, up to MAX_PER_TICK.
+// Two separate daily moments, driven by `phase` in the POST body (see
+// cron/index.js for the schedule):
+//  - phase 'sync' — 1PM IST. Pulls Metabase, adds newly-matched contacts
+//    to the pool. Always runs regardless of engine status, so the pool
+//    count on the page stays live either way. Does NOT send anything.
+//  - phase 'send' — 8PM IST (within the requested 5pm-6am sending
+//    window). Only runs if the engine is 'running': works out who's due
+//    their next sequence step (never sent -> due for step 1 immediately;
+//    sent step N -> due for step N+1 once `delay_days` of step N has
+//    passed since last_sent_at) and sends, up to MAX_PER_TICK.
+//  - phase 'both' (default, e.g. the "Run Now" button) — runs sync then
+//    send back to back, for manual testing.
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const sync = await syncPoolFromMetabase();
+    const phase = req.body?.phase || 'both';
+    let sync = null;
+
+    if (phase === 'sync' || phase === 'both') {
+      sync = await syncPoolFromMetabase();
+      await sb.from('email_automation_state').update({
+        last_sync_at: new Date().toISOString(), last_sync_matched: sync.matched, last_sync_added: sync.added,
+      }).eq('id', 'default');
+    }
+
+    if (phase === 'sync') {
+      return res.status(200).json({ success: true, phase, sync });
+    }
 
     const { data: state } = await sb.from('email_automation_state').select('*').eq('id', 'default').single();
-    await sb.from('email_automation_state').update({
-      last_sync_at: new Date().toISOString(), last_sync_matched: sync.matched, last_sync_added: sync.added,
-    }).eq('id', 'default');
-
     if (!state || state.status !== 'running') {
-      return res.status(200).json({ success: true, skipped: true, reason: `engine is ${state?.status || 'not configured'}`, sync });
+      return res.status(200).json({ success: true, skipped: true, reason: `engine is ${state?.status || 'not configured'}`, phase, sync });
     }
 
     const { data: sequence, error: seqErr } = await sb.from('email_automation_sequence')
       .select('*, email_drafts(id,subject,body,from_name)').order('step_number', { ascending: true });
     if (seqErr) throw seqErr;
-    if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured', sync });
+    if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured', phase, sync });
 
     const { data: pool, error: poolErr } = await sb.from('email_automation_pool').select('*').eq('status', 'active');
     if (poolErr) throw poolErr;
@@ -172,7 +178,7 @@ export default async function handler(req, res) {
     await sb.from('email_automation_state').update({ last_run_at: new Date().toISOString() }).eq('id', 'default');
 
     return res.status(200).json({
-      success: true, sync, due: due.length, sent, failed, completed: toComplete.length, removed: toRemove.length,
+      success: true, phase, sync, due: due.length, sent, failed, completed: toComplete.length, removed: toRemove.length,
       capped: remaining <= 0 && due.length > sent,
     });
   } catch (e) {
