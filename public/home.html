@@ -77,15 +77,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <span class="brand-tag live">Live</span>
     </div>
     <div class="cards-row">
-      <a class="card" href="/automation.html">
-        <div class="card-top"><span class="card-icon">💬</span><span class="card-title">WhatsApp Automation</span></div>
-        <div class="card-desc">Drip campaigns across GOC, GHC, AUSB, APR, Canada. R1→R2→R3 sequences with smart dedup.</div>
-        <div class="card-stats">
-          <div class="stat"><div class="sv" id="wa-schedules"><span class="spin"></span></div><div class="sl">Active Schedules</div></div>
-          <div class="stat"><div class="sv" id="wa-sent"><span class="spin"></span></div><div class="sl">Sent Today</div></div>
-        </div>
-        <div class="status-pill loading" id="wa-status"><span class="spin"></span> Checking</div>
-      </a>
       <a class="card" href="/email-automation.html">
         <div class="card-top"><span class="card-icon">🔁</span><span class="card-title">Email Automation</span></div>
         <div class="card-desc">A continuous drip sequence that advances the pool one step a day.</div>
@@ -129,15 +120,6 @@ const H={apikey:KEY,Authorization:`Bearer ${KEY}`,Prefer:'count=exact'};
 async function loadStats(){
   const today=new Date(Date.now()+330*60000).toISOString().split('T')[0];
   const set=(id,v)=>document.getElementById(id).textContent=v;
-  try{const r=await fetch(`${SB}/rest/v1/campaign_schedule?active=eq.true&select=id`,{headers:H});set('wa-schedules',r.headers.get('content-range')?.split('/')?.[1]||'—');}catch{set('wa-schedules','—');}
-  try{
-    const r=await fetch(`${SB}/rest/v1/sent_log?status=eq.success&sent_at=gte.${today}T00:00:00&select=id`,{headers:H});
-    const n=Number(r.headers.get('content-range')?.split('/')?.[1]||0);
-    set('wa-sent',n.toLocaleString());
-    const ws=document.getElementById('wa-status');
-    ws.className='status-pill '+(n>0?'live':'loading');
-    ws.textContent=n>0?'🟢 Active Today':'⏳ Scheduled';
-  }catch{set('wa-sent','—');}
   try{const r=await fetch(`${SB}/rest/v1/email_contacts?select=id`,{headers:H});set('em-contacts',Number(r.headers.get('content-range')?.split('/')?.[1]||0).toLocaleString());}catch{set('em-contacts','—');}
   try{const r=await fetch(`${SB}/rest/v1/email_sends?status=eq.sent&select=id`,{headers:H});set('em-sent',Number(r.headers.get('content-range')?.split('/')?.[1]||0).toLocaleString());}catch{set('em-sent','—');}
   try{const r=await fetch(`${SB}/rest/v1/email_sends?opened_at=not.is.null&select=id`,{headers:H});set('em-opened',Number(r.headers.get('content-range')?.split('/')?.[1]||0).toLocaleString());}catch{set('em-opened','—');}
