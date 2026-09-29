@@ -314,7 +314,7 @@
     (async function () {
         let cfg = { stats: [], links: [], footer: {} };
         try {
-            const res = await fetch('/api/linktree/config', { cache: 'no-store' });
+            const res = await fetch('https://smartping-email.vercel.app/api/linktree/config', { cache: 'no-store' });
             if (res.ok) cfg = await res.json();
         } catch (e) {
             // Network error — page renders with empty content rather than breaking.
