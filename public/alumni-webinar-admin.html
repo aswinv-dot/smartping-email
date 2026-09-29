@@ -18,25 +18,7 @@
 body{font-family:'Inter',sans-serif}
 
 .cms-layout{display:flex;gap:0;min-height:100vh}
-.cms-editor{flex:1;min-width:0;padding:24px;max-width:640px}
-.cms-preview-pane{
-  flex:1;min-width:0;background:#1a3a8f;position:sticky;top:0;
-  height:100vh;overflow-y:auto;display:flex;justify-content:center;
-  padding:40px 24px;
-}
-.cms-preview-card{width:100%;max-width:360px;align-self:flex-start}
-.pv-section-label{color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:20px 0 8px}
-.pv-refresh-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;margin-left:8px}
-.pv-full-frame-wrap{background:#fff;border-radius:14px;overflow:hidden;height:520px;position:relative}
-.pv-full-frame{width:400%;height:400%;transform:scale(0.25);transform-origin:top left;border:none}
-.pv-hero{
-  background:linear-gradient(160deg,#00215c 0%,#0a3278 100%);color:#fff;
-  border-radius:20px;padding:24px 20px;position:relative;overflow:hidden;
-}
-.pv-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(241,200,25,0.15);border:1px solid rgba(241,200,25,0.35);color:var(--gold);font-size:0.7rem;font-weight:600;padding:5px 12px;border-radius:100px;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase}
-.pv-badge-dot{width:6px;height:6px;background:var(--gold);border-radius:50%}
-.pv-hero-title{font-size:1.15rem;font-weight:800;line-height:1.25;margin-bottom:8px}
-.pv-hero-sub{font-size:0.82rem;color:rgba(255,255,255,0.75);margin-bottom:16px}
+.cms-editor{flex:1;min-width:0;padding:24px;max-width:640px;margin:0 auto}
 
 .cms-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .cms-title{font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:4px}
@@ -75,14 +57,6 @@ body{font-family:'Inter',sans-serif}
 
 .leads-note{background:#fff8e1;border:1px solid #f1c819;border-radius:12px;padding:14px 16px;font-size:0.8rem;color:#5a4b00;margin-bottom:20px;line-height:1.5}
 .leads-note a{color:var(--blue);font-weight:700}
-
-/* PREVIEW CARD */
-.pv-speaker-strip{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px 14px;margin-bottom:16px}
-.pv-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:rgba(255,255,255,0.1);flex-shrink:0}
-.pv-name{font-weight:700;color:#fff;font-size:0.92rem}
-.pv-role{font-size:0.76rem;color:var(--sky);margin-top:2px}
-.pv-schedule-row{display:flex;flex-wrap:wrap;gap:8px}
-.pv-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:6px 11px;border-radius:100px;font-size:0.72rem;font-weight:500;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -175,35 +149,6 @@ body{font-family:'Inter',sans-serif}
           <button class="save-btn" id="save-btn" onclick="saveConfig()">Save and Go Live</button>
         </div>
       </div>
-
-      <div class="cms-preview-pane">
-        <div class="cms-preview-card">
-          <div class="pv-hero">
-            <div class="pv-badge"><span class="pv-badge-dot"></span> Free Live Webinar</div>
-            <div class="pv-hero-title" id="prev-title">Webinar title preview</div>
-            <div class="pv-hero-sub" id="prev-sub">Join our alumnus live for a real, no-brochure walkthrough</div>
-            <div class="pv-speaker-strip">
-              <img class="pv-avatar" id="prev-img" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
-              <div>
-                <div class="pv-name" id="prev-name">Speaker Name</div>
-                <div class="pv-role" id="prev-role">Role</div>
-              </div>
-            </div>
-            <div class="pv-schedule-row">
-              <div class="pv-pill" id="prev-date">📅 Date</div>
-              <div class="pv-pill" id="prev-time">🕐 Time</div>
-            </div>
-          </div>
-
-          <div class="pv-section-label">
-            Full page preview (live page — save to update)
-            <button class="pv-refresh-btn" onclick="refreshFullPreview()">🔄 Refresh</button>
-          </div>
-          <div class="pv-full-frame-wrap">
-            <iframe class="pv-full-frame" id="full-preview-frame" title="Full page preview"></iframe>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -227,12 +172,6 @@ function switchProgram(p) {
   document.getElementById('tab-ausbildung').classList.toggle('active', p === 'ausbildung');
   document.getElementById('tab-ghc').classList.toggle('active', p === 'ghc');
   loadConfig();
-  refreshFullPreview();
-}
-
-function refreshFullPreview() {
-  const url = window.location.origin + '/' + PROGRAMS[currentProgram].page + '?preview=' + Date.now();
-  document.getElementById('full-preview-frame').src = url;
 }
 
 async function copyPageUrl() {
@@ -258,7 +197,6 @@ async function loadConfig() {
    'f-webinar-platform','f-whatsapp-channel','f-redirect-url','f-program-name','f-google-script'
   ].forEach(id => document.getElementById(id).value = '');
   document.getElementById('img-preview').src = 'https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png';
-  document.getElementById('prev-img').src    = 'https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png';
   window._imgUrl = null;
 
   try {
@@ -282,13 +220,10 @@ async function loadConfig() {
       setField('f-google-script',    data.google_script_url);
       if (data.speaker_image) {
         document.getElementById('img-preview').src = data.speaker_image;
-        document.getElementById('prev-img').src    = data.speaker_image;
         window._imgUrl = data.speaker_image;
       }
-      livePreview();
       setStatus('All changes saved', 'ok');
     } else {
-      livePreview();
       setStatus('No saved config yet for this program — fill in and save', '');
     }
   } catch (e) {
@@ -301,19 +236,6 @@ function setField(id, val) {
 }
 
 function livePreview() {
-  const name  = document.getElementById('f-speaker-name').value;
-  const role  = document.getElementById('f-speaker-role').value;
-  const date  = document.getElementById('f-webinar-date').value;
-  const time  = document.getElementById('f-webinar-time').value;
-  const title = document.getElementById('f-webinar-title').value;
-  document.getElementById('prev-name').textContent  = name || 'Speaker Name';
-  document.getElementById('prev-role').textContent  = role || 'Role';
-  document.getElementById('prev-date').textContent  = '📅 ' + (date || 'Date');
-  document.getElementById('prev-time').textContent  = '🕐 ' + (time || 'Time');
-  document.getElementById('prev-title').textContent = title || 'Webinar title preview';
-  document.getElementById('prev-sub').textContent = name
-    ? `Join ${name} live${date ? ' on ' + date : ''}${time ? ' at ' + time : ''}`
-    : 'Join our alumnus live for a real, no-brochure walkthrough';
   setStatus('Unsaved changes', '');
 }
 
@@ -346,7 +268,6 @@ async function uploadImage(input) {
   const { data } = sb.storage.from(BUCKET).getPublicUrl(fileName);
   window._imgUrl = data.publicUrl;
   document.getElementById('img-preview').src = data.publicUrl;
-  document.getElementById('prev-img').src    = data.publicUrl;
   status.textContent = 'Photo uploaded successfully';
   status.className   = 'upload-status ok';
   setStatus('Unsaved changes', '');
@@ -386,7 +307,6 @@ async function saveConfig() {
       .upsert(payload, { onConflict: 'id' });
     if (error) throw error;
     setStatus('Saved and live!', 'ok');
-    refreshFullPreview();
   } catch (e) {
     setStatus('Save failed. Try again.', 'err');
   }
@@ -407,7 +327,6 @@ function setStatus(msg, cls) {
 }
 
 loadConfig();
-refreshFullPreview();
 </script>
 </body>
 </html>
