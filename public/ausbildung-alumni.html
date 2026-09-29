@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alumni Webinar | TerraTern</title>
+  <link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ===== TOKENS ===== */
+    :root {
+      --navy:   #00215c;
+      --blue:   #255cc1;
+      --sky:    #9acbfd;
+      --gold:   #f1c819;
+      --gold-d: #c9a40f;
+      --white:  #ffffff;
+      --off:    #f5f8ff;
+      --muted:  #6b80a8;
+      --text:   #0d1b3e;
+      --border: #d6e3f8;
+      --radius: 16px;
+      --shadow: 0 4px 24px rgba(0,33,92,0.10);
+      --gutter: 20px;
+    }
+
+    
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--white);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== NAV ===== */
+    nav {
+      background: var(--white);
+      border-bottom: 1.5px solid var(--border);
+      padding: 14px var(--gutter);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+  .nav-logo img {
+      height: 32px;
+      width: auto;
+      display: block;
+    }
+    .nav-cta {
+      background: var(--gold);
+      color: var(--navy);
+      font-weight: 700;
+      font-size: 0.82rem;
+      padding: 8px 16px;
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
+      background: linear-gradient(160deg, var(--navy) 0%, #0a3278 100%);
+      color: var(--white);
+      padding: 28px var(--gutter) 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 80% 20%, rgba(145,203,253,0.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    /* badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(241,200,25,0.15);
+      border: 1px solid rgba(241,200,25,0.35);
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .badge-dot {
+      width: 7px; height: 7px;
+      background: var(--gold);
+      border-radius: 50%;
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.4; transform: scale(1.3); }
+    }
+
+    .hero-title {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(1.5rem, 6vw, 2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 10px;
+    }
+    .hero-title .accent { color: var(--gold); }
+
+    .hero-sub {
+      font-size: 0.95rem;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 20px;
+    }
+
+    /* speaker card */
+    .speaker-strip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 24px;
+    }
+    .speaker-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--gold);
+      flex-shrink: 0;
+    }
+    .speaker-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+    .speaker-role {
+      font-size: 0.8rem;
+      color: var(--sky);
+      margin-top: 2px;
+    }
+
+    /* schedule pills */
+    .schedule-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 7px 12px;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .pill svg { flex-shrink: 0; }
+
+    /* ===== FORM (hero + standalone) ===== */
+    .form-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 22px 18px;
+      margin: 0;
+      box-shadow: 0 -8px 32px rgba(0,33,92,0.18);
+      width: 100%;
+    }
+    .form-label-top {
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .form-sub {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 5px;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+      background: var(--off);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,92,193,0.12);
+      background: var(--white);
+    }
+    .form-group input::placeholder { color: #a0b0cc; }
+
+    .phone-wrap {
+      display: flex;
+      align-items: center;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      background: var(--off);
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .phone-wrap:focus-within {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,92,193,0.12);
+      background: var(--white);
+    }
+    .phone-prefix {
+      padding: 13px 10px 13px 14px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      background: transparent;
+      white-space: nowrap;
+      border-right: 1.5px solid var(--border);
+      user-select: none;
+    }
+    .phone-wrap input {
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 13px 14px !important;
+      flex: 1;
+      min-width: 0;
+    }
+    .phone-wrap input:focus {
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .btn-submit {
+      width: 100%;
+      background: var(--gold);
+      color: var(--navy);
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      padding: 15px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      letter-spacing: 0.02em;
+      transition: background 0.2s, transform 0.1s;
+      margin-top: 4px;
+    }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:hover  { background: var(--gold-d); }
+
+    .form-trust {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* success state */
+    .form-success {
+      display: none;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .form-success .tick {
+      width: 56px; height: 56px;
+      background: #e6f9f0;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+      font-size: 1.6rem;
+    }
+    .form-success h3 {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.1rem;
+      color: var(--navy);
+      margin-bottom: 6px;
+    }
+    .form-success p { font-size: 0.85rem; color: var(--muted); }
+
+    /* ===== SECTIONS ===== */
+    section {
+      padding: 48px var(--gutter);
+      background: var(--white);
+    }
+
+    .section-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--blue);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(1.3rem, 5vw, 1.7rem);
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.25;
+      margin-bottom: 16px;
+    }
+    .section-body {
+      font-size: 0.95rem;
+      color: #3a4f72;
+      line-height: 1.7;
+    }
+
+    /* ===== WHAT IS AUSBILDUNG ===== */
+    .aus-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .aus-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 16px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .aus-icon {
+      width: 42px; height: 42px;
+      background: rgba(37,92,193,0.08);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    .aus-card-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--navy);
+      margin-bottom: 4px;
+    }
+    .aus-card-text {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ===== EARNINGS ===== */
+    .earnings-section { background: var(--navy) !important; color: var(--white); }
+    .earnings-section .section-eyebrow { color: var(--sky) !important; }
+    .earnings-section .section-title   { color: var(--white) !important; }
+    .earnings-section .section-body    { color: rgba(255,255,255,0.65) !important; }
+
+    .earn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .earn-card {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 18px 14px;
+      text-align: center;
+    }
+    .earn-card.gold-card {
+      background: var(--gold);
+      border-color: var(--gold);
+      grid-column: 1 / -1;
+    }
+    .earn-amount {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .earn-card.gold-card .earn-amount { color: var(--navy); }
+    .earn-label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.65);
+      font-weight: 500;
+    }
+    .earn-card.gold-card .earn-label { color: rgba(0,33,92,0.7); }
+    .earn-note {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+    }
+
+    /* ===== WHAT YOU'LL LEARN ===== */
+    .learn-list {
+      list-style: none;
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .learn-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    .learn-num {
+      width: 28px; height: 28px;
+      background: var(--navy);
+      color: var(--gold);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 800;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .learn-text {
+      font-size: 0.9rem;
+      color: var(--text);
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    /* ===== BOTTOM FORM SECTION ===== */
+    .register-section {
+      background: linear-gradient(135deg, var(--navy), #0a3278) !important;
+      padding: 48px var(--gutter);
+    }
+    .register-section .section-eyebrow { color: var(--sky) !important; }
+    .register-section .section-title   { color: var(--white) !important; margin-bottom: 24px; }
+    .register-section .form-card {
+      border-radius: var(--radius);
+      margin: 0;
+      box-shadow: var(--shadow);
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: #000d26;
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 24px var(--gutter);
+      font-size: 0.78rem;
+    }
+    footer a { color: var(--sky); }
+
+    /* ===== DESKTOP ===== */
+    @media (min-width: 768px) {
+      :root { --gutter: 40px; }
+      .hero { padding: 60px var(--gutter) 60px; }
+      .hero-inner {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 48px;
+        align-items: end;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .hero-left { padding-bottom: 0; }
+      .hero-right { position: relative; }
+      .form-card {
+        border-radius: var(--radius);
+        margin: 0;
+        box-shadow: var(--shadow);
+      }
+      section { padding: 72px var(--gutter); }
+      .section-inner { max-width: 960px; margin: 0 auto; }
+      .aus-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .earn-grid { grid-template-columns: repeat(4, 1fr); }
+      .earn-card.gold-card { grid-column: auto; }
+      .learn-list { display: grid; grid-template-columns: 1fr 1fr; }
+      nav { padding: 16px var(--gutter); }
+      .register-section { padding: 80px var(--gutter); }
+      .register-form-wrap { max-width: 520px; margin: 0 auto; }
+      .register-section .form-card { box-shadow: var(--shadow); }
+    }
+  </style>
+  <!-- Meta Pixel -->
+  <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1023879372044510');
+    fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1023879372044510&ev=PageView&noscript=1"/></noscript>
+  <!-- End Meta Pixel -->
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo"><img src="https://terratern.com/images/logo.svg" alt="TerraTern" /></div>
+  <a class="nav-cta" href="#register">Reserve My Seat →</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="badge"><span class="badge-dot"></span> Free Live Webinar</div>
+      <h1 class="hero-title" id="hero-title">Loading…</h1>
+      <p class="hero-sub" id="hero-sub">Loading…</p>
+
+      <div class="speaker-strip">
+        <img class="speaker-avatar" id="speaker-img" src="" alt="Speaker" />
+        <div>
+          <div class="speaker-name" id="speaker-name">...</div>
+          <div class="speaker-role" id="speaker-role">...</div>
+        </div>
+      </div>
+
+      <div class="schedule-row">
+        <div class="pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span id="webinar-date">...</span>
+        </div>
+        <div class="pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="webinar-time">...</span>
+        </div>
+        <div class="pill">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l-4 4l6 6l4-16l-18 7l4 2l2 6l3-4"/></svg>
+          <span id="webinar-platform">...</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO FORM -->
+    <div class="hero-right">
+      <div class="form-card">
+        <div class="form-label-top">Register for Free 🎯</div>
+        <div class="form-sub">Seats are limited. Secure yours now</div>
+        <div id="hero-form-wrap">
+          <form id="hero-form" onsubmit="submitForm(event,'hero')">
+            <div class="form-group">
+              <label for="h-name">Full Name</label>
+              <input id="h-name" type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label for="h-email">Email Address</label>
+              <input id="h-email" type="email" placeholder="you@email.com" required />
+            </div>
+            <div class="form-group">
+              <label for="h-wa">WhatsApp Number</label>
+              <div class="phone-wrap">
+                <span class="phone-prefix">+91</span>
+                <input id="h-wa" type="tel" placeholder="98765 43210" maxlength="10" pattern="[0-9]{10}" required />
+              </div>
+            </div>
+            <button class="btn-submit" type="submit" id="hero-btn">Reserve My Seat →</button>
+          </form>
+          <div class="form-success" id="hero-success">
+            <div class="tick">✅</div>
+            <h3>You're registered!</h3>
+            <p>Check WhatsApp for your webinar link. See you there 🎉</p>
+          </div>
+          <div class="form-trust">🔒 No spam. We'll only send the webinar details.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT IS AUSBILDUNG -->
+<section style="background: var(--off)">
+  <div class="section-inner">
+    <div class="section-eyebrow">Programme Overview</div>
+    <h2 class="section-title">What is Ausbildung?</h2>
+    <p class="section-body">Ausbildung is Germany's world-famous vocational training programme, a government-recognised dual system where you work at a company <em>and</em> attend a trade school simultaneously. You earn a salary from day one, with no tuition fees.</p>
+
+    <div class="aus-grid">
+      <div class="aus-card">
+        <div class="aus-icon">🎓</div>
+        <div>
+          <div class="aus-card-title">Work + Study Together</div>
+          <div class="aus-card-text">4 days at your employer, 1 day at a vocational school. Real experience from day one.</div>
+        </div>
+      </div>
+      <div class="aus-card">
+        <div class="aus-icon">💶</div>
+        <div>
+          <div class="aus-card-title">Paid from Day One</div>
+          <div class="aus-card-text">You receive a trainee salary throughout the programme. No loans, no debt.</div>
+        </div>
+      </div>
+      <div class="aus-card">
+        <div class="aus-icon">📋</div>
+        <div>
+          <div class="aus-card-title">Government Recognised</div>
+          <div class="aus-card-text">Official German qualification valid across the EU, opening doors across Europe.</div>
+        </div>
+      </div>
+      <div class="aus-card">
+        <div class="aus-icon">⏱️</div>
+        <div>
+          <div class="aus-card-title">2–3 Years Duration</div>
+          <div class="aus-card-text">Depending on your field. Healthcare roles typically take 3 years with full employment rights.</div>
+        </div>
+      </div>
+      <div class="aus-card">
+        <div class="aus-icon">🌍</div>
+        <div>
+          <div class="aus-card-title">PR Pathway</div>
+          <div class="aus-card-text">Complete your Ausbildung and you're eligible to apply for German permanent residency.</div>
+        </div>
+      </div>
+      <div class="aus-card">
+        <div class="aus-icon">🗣️</div>
+        <div>
+          <div class="aus-card-title">German Language Support</div>
+          <div class="aus-card-text">B2 level is typically required. TerraTern's programme includes language preparation.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EARNINGS -->
+<section class="earnings-section">
+  <div class="section-inner">
+    <div class="section-eyebrow">Real Numbers</div>
+    <h2 class="section-title">What You Can Earn in Germany 🇩🇪</h2>
+    <p class="section-body" style="color:rgba(255,255,255,0.65);">These are actual figures from TerraTern alumni currently working in Germany, not estimates.</p>
+
+    <div class="earn-grid">
+      <div class="earn-card gold-card">
+        <div class="earn-amount">₹2.5L – ₹3.5L</div>
+        <div class="earn-label">Average monthly salary after completing Ausbildung</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-amount">€800–€1,200</div>
+        <div class="earn-label">Trainee monthly stipend during programme</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-amount">€0</div>
+        <div class="earn-label">Tuition fees: fully free education</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-amount">€2,800+</div>
+        <div class="earn-label">Average senior nurse salary per month</div>
+      </div>
+      <div class="earn-card">
+        <div class="earn-amount">30 days</div>
+        <div class="earn-label">Annual paid leave by law</div>
+      </div>
+    </div>
+    <p class="earn-note">* Figures are indicative and vary by employer, state, and field of training.</p>
+  </div>
+</section>
+
+<!-- WHAT YOU'LL LEARN -->
+<section style="background: var(--white)">
+  <div class="section-inner">
+    <div class="section-eyebrow">Webinar Agenda</div>
+    <h2 class="section-title">What You'll Learn in This Session</h2>
+    <p class="section-body">Our alumni will walk you through their personal journey. The real story, not the brochure version.</p>
+
+    <ul class="learn-list">
+      <li class="learn-item">
+        <div class="learn-num">01</div>
+        <div class="learn-text">How our alumna got selected for Ausbildung: the exact process, documents, and timeline</div>
+      </li>
+      <li class="learn-item">
+        <div class="learn-num">02</div>
+        <div class="learn-text">What daily life looks like in Germany: accommodation, food, culture, and adjusting</div>
+      </li>
+      <li class="learn-item">
+        <div class="learn-num">03</div>
+        <div class="learn-text">Breaking down the actual salary: what you take home after German taxes and deductions</div>
+      </li>
+      <li class="learn-item">
+        <div class="learn-num">04</div>
+        <div class="learn-text">Language tips: how to clear B2 German even if you're starting from zero</div>
+      </li>
+      <li class="learn-item">
+        <div class="learn-num">05</div>
+        <div class="learn-text">The path from Ausbildung to German PR: exact eligibility criteria and timelines</div>
+      </li>
+      <li class="learn-item">
+        <div class="learn-num">06</div>
+        <div class="learn-text">Live Q&A: ask anything directly to someone who's already done it</div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- BOTTOM REGISTER FORM -->
+<section class="register-section" id="register">
+  <div class="section-inner">
+    <div class="section-eyebrow">Join Live</div>
+    <h2 class="section-title">Reserve Your Free Seat</h2>
+    <div class="register-form-wrap">
+      <div class="form-card">
+        <div class="form-label-top">Register Now. It's Free 🙌</div>
+        <div class="form-sub">You'll receive the Zoom link on WhatsApp before the webinar</div>
+        <div id="bottom-form-wrap">
+          <form id="bottom-form" onsubmit="submitForm(event,'bottom')">
+            <div class="form-group">
+              <label for="b-name">Full Name</label>
+              <input id="b-name" type="text" placeholder="Your name" required />
+            </div>
+            <div class="form-group">
+              <label for="b-email">Email Address</label>
+              <input id="b-email" type="email" placeholder="you@email.com" required />
+            </div>
+            <div class="form-group">
+              <label for="b-wa">WhatsApp Number</label>
+              <div class="phone-wrap">
+                <span class="phone-prefix">+91</span>
+                <input id="b-wa" type="tel" placeholder="98765 43210" maxlength="10" pattern="[0-9]{10}" required />
+              </div>
+            </div>
+            <button class="btn-submit" type="submit" id="bottom-btn">Reserve My Seat →</button>
+          </form>
+          <div class="form-success" id="bottom-success">
+            <div class="tick">✅</div>
+            <h3>You're registered!</h3>
+            <p>Check WhatsApp for your webinar link. See you there 🎉</p>
+          </div>
+          <div class="form-trust">🔒 No spam. We'll only send the webinar details.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p id="footer-text">© 2025 TerraTern. All rights reserved.</p>
+</footer>
+
+<!-- SCRIPT -->
+<script src="alumni-webinar-config.js"></script>
+<script>
+  const SUPABASE_URL = 'https://otzmitwvvetdzheogtkr.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90em1pdHd2dmV0ZHpoZW9ndGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjAzNTUsImV4cCI6MjA5NjgzNjM1NX0.YQwCTN7cxq0Zo0e66_Kl2yAmN0okWyqpTq-ktgexlig';
+
+  // ---- Load config from Supabase, fallback to config.js ----
+  async function loadConfig() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/webinar_config?id=eq.1&select=*`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const data = await res.json();
+      if (data && data.length > 0) {
+        const r = data[0];
+        return {
+          speakerName:     r.speaker_name     || CONFIG.speakerName,
+          speakerRole:     r.speaker_role     || CONFIG.speakerRole,
+          speakerImage:    r.speaker_image    || CONFIG.speakerImage,
+          webinarTitle:    r.webinar_title    || CONFIG.webinarTitle,
+          webinarDate:     r.webinar_date     || CONFIG.webinarDate,
+          webinarTime:     r.webinar_time     || CONFIG.webinarTime,
+          webinarPlatform: r.webinar_platform || CONFIG.webinarPlatform,
+          programName:     r.program_name     || CONFIG.programName,
+          whatsappChannel: r.whatsapp_channel || CONFIG.whatsappChannel,
+          redirectURL:     r.redirect_url     || CONFIG.redirectURL,
+          googleScriptURL: r.google_script_url|| CONFIG.googleScriptURL,
+          companyName:     CONFIG.companyName,
+        };
+      }
+    } catch(e) {
+      console.warn('Supabase fetch failed, using config.js fallback', e);
+    }
+    return CONFIG;
+  }
+
+  // ---- Inject config into DOM ----
+  loadConfig().then(cfg => {
+    window._CFG = cfg;
+
+    document.getElementById('hero-title').innerHTML =
+      cfg.webinarTitle.replace('Germany', '<span class="accent">Germany</span>');
+    document.getElementById('hero-sub').textContent =
+      `Join ${cfg.speakerName} live on ${cfg.webinarDate} at ${cfg.webinarTime}`;
+    document.getElementById('speaker-img').src  = cfg.speakerImage;
+    document.getElementById('speaker-img').alt  = cfg.speakerName;
+    document.getElementById('speaker-name').textContent = cfg.speakerName;
+    document.getElementById('speaker-role').textContent = cfg.speakerRole;
+    document.getElementById('webinar-date').textContent = cfg.webinarDate;
+    document.getElementById('webinar-time').textContent = cfg.webinarTime;
+    document.getElementById('webinar-platform').textContent = cfg.webinarPlatform;
+
+    // Footer
+    document.getElementById('footer-text').textContent =
+      `© ${new Date().getFullYear()} ${cfg.companyName}. All rights reserved.`;
+
+    // Page title
+    document.title = `Alumni Webinar | ${cfg.companyName}`;
+  });
+
+  // ---- Capture UTM params from URL ----
+  const _utm = (() => {
+    const p = new URLSearchParams(window.location.search);
+    return {
+      utm_source:   p.get('utm_source')   || '',
+      utm_medium:   p.get('utm_medium')   || '',
+      utm_campaign: p.get('utm_campaign') || '',
+      utm_adset:    p.get('utm_adset')    || '',
+      utm_placement:p.get('utm_placement')|| ''
+    };
+  })();
+
+  // ---- Digits only for WA inputs ----
+  ['h-wa','b-wa'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      el.value = el.value.replace(/\D/g, '').slice(0, 10);
+    });
+  });
+
+  // ---- Form submission ----
+  async function submitForm(e, formId) {
+    e.preventDefault();
+    const cfg    = window._CFG || CONFIG;
+    const isHero = formId === 'hero';
+    const btn    = document.getElementById(isHero ? 'hero-btn' : 'bottom-btn');
+    const form   = document.getElementById(isHero ? 'hero-form' : 'bottom-form');
+
+    const name  = document.getElementById(isHero ? 'h-name'  : 'b-name').value.trim();
+    const email = document.getElementById(isHero ? 'h-email' : 'b-email').value.trim();
+    const wa    = document.getElementById(isHero ? 'h-wa'    : 'b-wa').value.trim();
+
+    btn.textContent = 'Submitting...';
+    btn.disabled = true;
+
+    const payload = new URLSearchParams({
+      name,
+      email,
+      whatsapp: '91' + wa,
+      speaker: cfg.speakerName,
+      program: cfg.programName,
+      date: cfg.webinarDate,
+      time: cfg.webinarTime,
+      utm_source:    _utm.utm_source,
+      utm_medium:    _utm.utm_medium,
+      utm_campaign:  _utm.utm_campaign,
+      utm_adset:     _utm.utm_adset,
+      utm_placement: _utm.utm_placement
+    });
+
+    try {
+      await fetch(cfg.googleScriptURL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload.toString()
+      });
+      if (typeof fbq !== 'undefined') fbq('track', 'Lead');
+      showPopup(name, cfg);
+    } catch (err) {
+      btn.textContent = 'Try Again';
+      btn.disabled = false;
+      alert('Something went wrong. Please try again.');
+    }
+  }
+
+  // ---- Popup ----
+  function showPopup(name, cfg) {
+    document.getElementById('popup-name').textContent = name.split(' ')[0];
+    document.getElementById('popup-wa-btn').href = cfg.whatsappChannel;
+    document.getElementById('thankyou-popup').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePopup() {
+    const cfg = window._CFG || CONFIG;
+    window.location.href = cfg.whatsappChannel;
+  }
+</script>
+
+<!-- THANK YOU POPUP -->
+<div id="thankyou-popup" style="display:none; position:fixed; inset:0; background:rgba(0,33,92,0.75); z-index:999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:20px; padding:36px 28px; max-width:420px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="width:64px;height:64px;background:#e6f9f0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:1.8rem;">🎉</div>
+    <h2 style="font-family:'Inter',sans-serif;font-size:1.3rem;font-weight:800;color:#00215c;margin-bottom:10px;">You're registered, <span id="popup-name"></span>!</h2>
+    <p style="font-size:0.9rem;color:#6b80a8;line-height:1.6;margin-bottom:24px;">Thank you for signing up. Join our WhatsApp channel to get the webinar link, reminders and updates directly on your phone.</p>
+    <a id="popup-wa-btn" href="#" target="_blank"
+      onclick="if(typeof fbq!=='undefined')fbq('track','CompleteRegistration');setTimeout(closePopup, 1500)"
+      style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;font-family:'Inter',sans-serif;font-weight:700;font-size:1rem;padding:15px 20px;border-radius:12px;text-decoration:none;margin-bottom:12px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Join WhatsApp Channel
+    </a>
+  </div>
+</div>
+</body>
+</html>

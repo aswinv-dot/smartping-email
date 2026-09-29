@@ -44,6 +44,14 @@
         { label: 'CMS', href: '/linktree-admin.html', icon: '🔗' },
       ],
     },
+    {
+      id: 'alumni-webinar',
+      name: 'Ops x Alumni Webinar',
+      links: [
+        { label: 'GHC Alumni Webinar', href: '/ghc-alum.html', icon: '🎓' },
+        { label: 'Ausbildung Alumni Webinar', href: '/ausbildung-alumni.html', icon: '🎓' },
+      ],
+    },
   ];
 
   function getPref(key, fallback) {
