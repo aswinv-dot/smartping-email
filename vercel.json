@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/",
+      "source": "/linkinbio.html",
       "has": [{ "type": "host", "value": "pages.terratern.com" }],
       "destination": "/linktree.html"
     }
