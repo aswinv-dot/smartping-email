@@ -2,8 +2,8 @@ const fetch      = require('node-fetch');
 const cron       = require('node-cron');
 const http       = require('http');
 // ── CONFIG ────────────────────────────────────────────────────
-const SUPABASE_URL      = "https://oagsgovnxgiszofgytre.supabase.co";
-const SUPABASE_KEY      = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI";
+const SUPABASE_URL      = process.env.SUPABASE_URL || "https://oagsgovnxgiszofgytre.supabase.co";
+const SUPABASE_KEY      = process.env.SUPABASE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI";
 const PORT               = process.env.PORT || 3001;
 
 // ── EMAIL ─────────────────────────────────────────────────────

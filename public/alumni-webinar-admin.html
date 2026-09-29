@@ -292,11 +292,12 @@ async function saveConfig() {
   );
 
   try {
-    if (!sb) throw new Error('Supabase client not loaded');
-    const { error } = await sb
-      .from('webinar_config')
-      .upsert(payload, { onConflict: 'id' });
-    if (error) throw error;
+    const res = await fetch('/api/webinar/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('save failed');
     setStatus('Saved and live!', 'ok');
   } catch (e) {
     setStatus('Save failed. Try again.', 'err');
