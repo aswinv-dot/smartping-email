@@ -20,7 +20,11 @@ export default function Login() {
         window.location.href = '/home.html';
         return;
       }
-      setError('Incorrect username or password');
+      if (res.status === 429) {
+        setError('Too many attempts. Please wait a minute and try again.');
+      } else {
+        setError('Incorrect username or password');
+      }
     } catch (e) {
       setError('Could not reach the server. Try again.');
     }
