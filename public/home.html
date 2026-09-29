@@ -90,35 +90,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <tr><td class="rn">Pool — active</td><td class="rv" id="rp-pool-active">…</td></tr>
         <tr><td class="rn">Pool — completed</td><td class="rv" id="rp-pool-done">…</td></tr>
         <tr><td class="rn">Last automation run</td><td class="rv" id="rp-last-run">…</td></tr>
+        <tr><td class="rn">Email API</td><td class="rv" id="rp-api-status">…</td></tr>
       </tbody>
     </table>
   </div>
-
-  <div class="brand-section">
-    <div class="brand-header">
-      <img class="brand-logo" src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/>
-      <span class="brand-name">TerraTern</span>
-      <span class="brand-tag live">Live</span>
-    </div>
-    <div class="cards-row">
-      <a class="card" href="/email-automation.html">
-        <div class="card-top"><span class="card-icon">🔁</span><span class="card-title">Email Automation</span></div>
-        <div class="card-desc">A continuous drip sequence that advances the pool one step a day.</div>
-      </a>
-      <a class="card" href="/analytics.html">
-        <div class="card-top"><span class="card-icon">📧</span><span class="card-title">Email Marketing</span></div>
-        <div class="card-desc">Sent via Infobip. Compose campaigns, sync contacts, track open & click rates.</div>
-        <div class="card-stats">
-          <div class="stat"><div class="sv" id="em-contacts"><span class="spin"></span></div><div class="sl">Contacts</div></div>
-          <div class="stat"><div class="sv" id="em-sent"><span class="spin"></span></div><div class="sl">Sent</div></div>
-          <div class="stat"><div class="sv" id="em-opened"><span class="spin"></span></div><div class="sl">Opened</div></div>
-        </div>
-        <div class="status-pill loading" id="em-status"><span class="spin"></span> Checking</div>
-      </a>
-    </div>
-  </div>
-
-  <div class="divider"></div>
 
   <div class="brand-section">
     <div class="brand-header">
@@ -178,10 +153,6 @@ async function loadStats(){
   set('rp-pool-active', fmt(poolActive));
   set('rp-pool-done', fmt(poolDone));
 
-  set('em-contacts', fmt(contacts));
-  set('em-sent', fmt(sentTotal));
-  set('em-opened', fmt(opened));
-
   try{
     const r=await fetch(`${SB}/rest/v1/email_automation_state?select=status,last_run_at&id=eq.default`,{headers:H});
     const d=await r.json();
@@ -193,10 +164,8 @@ async function loadStats(){
   try{
     const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),8000);
     const r=await fetch('/api/email/health',{signal:ctrl.signal});const d=await r.json();
-    const es=document.getElementById('em-status');
-    es.className='status-pill '+(d.live?'live':'down');
-    es.textContent=d.live?'🟢 Email API Live':'🔴 Email API Down';
-  }catch{const es=document.getElementById('em-status');es.className='status-pill down';es.textContent='🔴 Email API Down';}
+    set('rp-api-status', d.live?'🟢 Live':'🔴 Down');
+  }catch{ set('rp-api-status','🔴 Down'); }
 }
 window.onload=loadStats;
 </script>

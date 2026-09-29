@@ -31,7 +31,6 @@
         <img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/>
         <div class="shell-brand-text">
           <div class="shell-brand-name">Marketing CRM</div>
-          <div class="shell-brand-sub">TerraTern-SmartPing</div>
         </div>
       </div>
       <div class="shell-tree">
