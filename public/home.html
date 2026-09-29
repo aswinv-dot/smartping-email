@@ -11,34 +11,8 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#00215C;--blue:#255CC1;--bg:#f0f4fb;--surface:#fff;--border:#dde6f5;--text:#00215C;--muted:#5a7ab5;--green:#1a9e5c;--font:'Inter',system-ui,sans-serif}
 [data-theme='dark']{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--navy:#0f172a}
-[data-theme='dark'] .card-title,.brand-name{color:var(--text)}
-[data-theme='dark'] .stat-val{color:var(--text)}
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;transition:background .2s}
 .page{padding:32px 24px;max-width:960px;margin:0 auto}
-.brand-section{margin-bottom:36px}
-.brand-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--border)}
-.brand-logo{width:32px;height:32px;border-radius:8px;object-fit:contain}
-.brand-name{font-size:16px;font-weight:800;color:var(--navy)}
-.brand-tag{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
-.brand-tag.live{background:rgba(26,158,92,.15);color:var(--green)}
-.brand-tag.soon{background:#f0f4fb;color:var(--muted)}
-.cards-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:24px;text-decoration:none;color:var(--text);transition:all .15s;display:block;position:relative}
-.card:not(.disabled):hover{border-color:var(--blue);box-shadow:0 4px 20px rgba(0,33,92,.1);transform:translateY(-2px)}
-.card.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
-.card-top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.card-icon{font-size:24px}
-.card-title{font-size:14px;font-weight:800;color:var(--navy)}
-.card-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px}
-.card-stats{display:flex;gap:20px;flex-wrap:wrap}
-.stat .sv{font-size:20px;font-weight:800;color:var(--navy)}
-.stat .sl{font-size:10px;color:var(--muted);font-weight:600}
-.status-pill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;margin-top:10px}
-.status-pill.live{background:rgba(26,158,92,.15);color:var(--green)}
-.status-pill.down{background:#fdecea;color:#e03e3e}
-.status-pill.loading{background:#f0f4fb;color:var(--muted)}
-.divider{border:none;border-top:1.5px solid var(--border);margin:28px 0}
-.coming-soon{position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f0f4fb;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;width:8px;height:8px;border:1.5px solid rgba(90,122,181,.3);border-top-color:var(--muted);border-radius:50%;animation:spin .7s linear infinite}
 
@@ -93,18 +67,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <tr><td class="rn">Email API</td><td class="rv" id="rp-api-status">…</td></tr>
       </tbody>
     </table>
-  </div>
-
-  <div class="brand-section">
-    <div class="brand-header">
-      <img class="brand-logo" src="https://hirenudge.ai/logo.svg" alt="HireNudge"/>
-      <span class="brand-name">HireNudge</span>
-      <span class="brand-tag soon">Coming Soon</span>
-    </div>
-    <div class="cards-row">
-      <div class="card disabled"><div class="coming-soon">Coming Soon</div><div class="card-top"><span class="card-icon">💬</span><span class="card-title">WhatsApp Automation</span></div><div class="card-desc">Job placement drip sequences for candidates across verticals.</div></div>
-      <div class="card disabled"><div class="coming-soon">Coming Soon</div><div class="card-top"><span class="card-icon">📧</span><span class="card-title">Email Marketing</span></div><div class="card-desc">Automated email campaigns for HireNudge job seekers.</div></div>
-    </div>
   </div>
 </div>
 
