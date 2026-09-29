@@ -7,18 +7,25 @@
 // anyone who viewed page source, and could be spammed directly, bypassing
 // the site entirely.
 //
-// Now the pages POST here instead. The actual Apps Script URL for each
-// program lives only in Vercel Environment Variables, never shipped to
-// the browser, and is picked server-side by the `program` field the page
-// already knows about itself.
+// Now the pages POST here instead. The actual Apps Script URL lives only
+// in a Vercel Environment Variable, never shipped to the browser.
 //
-// Env vars required (Vercel -> Settings -> Environment Variables):
-//   WEBINAR_GOOGLE_SCRIPT_URL_AUSBILDUNG
-//   WEBINAR_GOOGLE_SCRIPT_URL_GHC
+// Both webinars (Ausbildung and GHC) were already pointed at the exact
+// same Apps Script URL before this change (confirmed in
+// public/alumni-webinar-config.js), so this uses a single shared env var
+// rather than one per program — the script itself tells leads apart via
+// the `program` field already included in every submission.
+//
+// Env var required (Vercel -> Settings -> Environment Variables):
+//   WEBINAR_GOOGLE_SCRIPT_URL
+//
+// If you ever do split them into separate Apps Scripts per program, set
+// WEBINAR_GOOGLE_SCRIPT_URL_AUSBILDUNG / _GHC instead — those take
+// priority over the shared one below.
 
 const SCRIPT_URL_BY_PROGRAM = {
-  ausbildung: process.env.WEBINAR_GOOGLE_SCRIPT_URL_AUSBILDUNG,
-  ghc: process.env.WEBINAR_GOOGLE_SCRIPT_URL_GHC,
+  ausbildung: process.env.WEBINAR_GOOGLE_SCRIPT_URL_AUSBILDUNG || process.env.WEBINAR_GOOGLE_SCRIPT_URL,
+  ghc: process.env.WEBINAR_GOOGLE_SCRIPT_URL_GHC || process.env.WEBINAR_GOOGLE_SCRIPT_URL,
 };
 
 // Very small in-memory rate limiter — resets on cold start / per instance,
