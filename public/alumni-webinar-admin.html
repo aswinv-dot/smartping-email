@@ -195,7 +195,7 @@ function switchProgram(p) {
 }
 
 async function copyPageUrl() {
-  const url = window.location.origin + '/' + PROGRAMS[currentProgram].page;
+  const url = 'https://pages.terratern.com/' + PROGRAMS[currentProgram].page;
   const btn = document.getElementById('copy-link-btn');
   try {
     await navigator.clipboard.writeText(url);
