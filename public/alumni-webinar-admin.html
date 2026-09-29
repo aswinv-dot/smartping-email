@@ -24,7 +24,15 @@ body{font-family:'Inter',sans-serif}
   height:100vh;overflow-y:auto;display:flex;justify-content:center;
   padding:40px 24px;
 }
-.cms-preview-card{width:100%;max-width:360px;background:rgba(255,255,255,0.06);border-radius:20px;padding:24px;align-self:flex-start}
+.cms-preview-card{width:100%;max-width:360px;align-self:flex-start}
+.pv-hero{
+  background:linear-gradient(160deg,#00215c 0%,#0a3278 100%);color:#fff;
+  border-radius:20px;padding:24px 20px;position:relative;overflow:hidden;
+}
+.pv-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(241,200,25,0.15);border:1px solid rgba(241,200,25,0.35);color:var(--gold);font-size:0.7rem;font-weight:600;padding:5px 12px;border-radius:100px;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase}
+.pv-badge-dot{width:6px;height:6px;background:var(--gold);border-radius:50%}
+.pv-hero-title{font-size:1.15rem;font-weight:800;line-height:1.25;margin-bottom:8px}
+.pv-hero-sub{font-size:0.82rem;color:rgba(255,255,255,0.75);margin-bottom:16px}
 
 .cms-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .cms-title{font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:4px}
@@ -65,11 +73,12 @@ body{font-family:'Inter',sans-serif}
 .leads-note a{color:var(--blue);font-weight:700}
 
 /* PREVIEW CARD */
-.pv-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:rgba(255,255,255,0.1);margin-bottom:14px}
-.pv-name{font-weight:700;color:#fff;font-size:1rem}
-.pv-role{font-size:0.78rem;color:var(--sky);margin-top:3px}
-.pv-date{font-size:0.78rem;color:rgba(255,255,255,0.6);margin-top:3px}
-.pv-title{font-size:0.95rem;font-weight:700;color:#fff;margin-top:16px;line-height:1.4}
+.pv-speaker-strip{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px 14px;margin-bottom:16px}
+.pv-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:rgba(255,255,255,0.1);flex-shrink:0}
+.pv-name{font-weight:700;color:#fff;font-size:0.92rem}
+.pv-role{font-size:0.76rem;color:var(--sky);margin-top:2px}
+.pv-schedule-row{display:flex;flex-wrap:wrap;gap:8px}
+.pv-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:6px 11px;border-radius:100px;font-size:0.72rem;font-weight:500;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -165,11 +174,22 @@ body{font-family:'Inter',sans-serif}
 
       <div class="cms-preview-pane">
         <div class="cms-preview-card">
-          <img class="pv-avatar" id="prev-img" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
-          <div class="pv-name" id="prev-name">Speaker Name</div>
-          <div class="pv-role" id="prev-role">Role</div>
-          <div class="pv-date" id="prev-date">Date and Time</div>
-          <div class="pv-title" id="prev-title">Webinar title preview</div>
+          <div class="pv-hero">
+            <div class="pv-badge"><span class="pv-badge-dot"></span> Free Live Webinar</div>
+            <div class="pv-hero-title" id="prev-title">Webinar title preview</div>
+            <div class="pv-hero-sub" id="prev-sub">Join our alumnus live for a real, no-brochure walkthrough</div>
+            <div class="pv-speaker-strip">
+              <img class="pv-avatar" id="prev-img" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
+              <div>
+                <div class="pv-name" id="prev-name">Speaker Name</div>
+                <div class="pv-role" id="prev-role">Role</div>
+              </div>
+            </div>
+            <div class="pv-schedule-row">
+              <div class="pv-pill" id="prev-date">📅 Date</div>
+              <div class="pv-pill" id="prev-time">🕐 Time</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -270,8 +290,12 @@ function livePreview() {
   const title = document.getElementById('f-webinar-title').value;
   document.getElementById('prev-name').textContent  = name || 'Speaker Name';
   document.getElementById('prev-role').textContent  = role || 'Role';
-  document.getElementById('prev-date').textContent  = (date || time) ? `${date} at ${time}` : 'Date and Time';
+  document.getElementById('prev-date').textContent  = '📅 ' + (date || 'Date');
+  document.getElementById('prev-time').textContent  = '🕐 ' + (time || 'Time');
   document.getElementById('prev-title').textContent = title || 'Webinar title preview';
+  document.getElementById('prev-sub').textContent = name
+    ? `Join ${name} live${date ? ' on ' + date : ''}${time ? ' at ' + time : ''}`
+    : 'Join our alumnus live for a real, no-brochure walkthrough';
   setStatus('Unsaved changes', '');
 }
 
