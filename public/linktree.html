@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "lubdfw20lq");
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraTern</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #255cc1;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 680px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 2px;
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .tagline {
+            text-align: center;
+            color: white;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tagline-main {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f1c819;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 400;
+            color: #9acbfd;
+            margin-top: 2px;
+        }
+
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .link-button {
+            background: white;
+            color: #00215c;
+            text-decoration: none;
+            padding: 20px 24px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 15px;
+            text-align: left;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .link-title {
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .link-subtitle {
+            font-size: 13px;
+            color: #4a5568;
+            font-weight: 400;
+            line-height: 1.5;
+            margin-left: 28px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f1c819 0%, #f39c12 100%);
+            color: #00215c;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 8px;
+            border-radius: 10px;
+            margin-left: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .badge-urgent {
+            background: linear-gradient(135deg, #ff4757 0%, #e84118 100%);
+            color: white;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .link-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(154, 203, 253, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .link-button:hover::before {
+            left: 100%;
+        }
+
+        .link-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            background: #f1c819;
+        }
+
+        .link-button:active {
+            transform: translateY(0);
+        }
+
+        .link-icon {
+            margin-right: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: #9acbfd;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #f1c819;
+        }
+
+        .contact {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f1c819;
+        }
+
+        .copyright {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                width: 160px;
+                height: 160px;
+            }
+
+            .tagline-main {
+                font-size: 16px;
+                padding: 0 10px;
+            }
+
+            .stats {
+                gap: 20px;
+            }
+
+            .stat-number {
+                font-size: 22px;
+            }
+
+            .stat-label {
+                font-size: 11px;
+            }
+
+            .link-button {
+                padding: 18px 20px;
+            }
+
+            .link-title {
+                font-size: 15px;
+            }
+
+            .link-subtitle {
+                font-size: 12px;
+                margin-left: 26px;
+            }
+
+            .badge {
+                font-size: 10px;
+                padding: 2px 6px;
+            }
+
+            .contact {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <div class="logo">
+                <img src="https://raw.githubusercontent.com/aswinv-dot/TerraTern-linktree/main/logo.png" alt="TerraTern Logo">
+            </div>
+        </div>
+
+        <div class="tagline">
+            <div class="tagline-main" id="tagline-text"></div>
+            <div class="stats" id="stats-row"></div>
+        </div>
+
+        <div class="links" id="links-list"></div>
+
+        <div class="footer">
+            <div class="contact" id="footer-phone"></div>
+            <a id="footer-map-link" target="_blank" style="text-decoration: none; color: white;">
+                <div class="contact" style="font-size: 14px; font-weight: 400; margin-top: 8px; margin-bottom: 16px; cursor: pointer; transition: color 0.3s ease;" id="footer-address"></div>
+            </a>
+            <div class="footer-links">
+                <a class="footer-link" id="footer-privacy">Privacy Policy</a>
+                <a class="footer-link" id="footer-terms">Terms &amp; Conditions</a>
+            </div>
+            <div class="copyright" id="footer-copyright"></div>
+        </div>
+    </div>
+
+    <script src="/linktree-config.js"></script>
+    <script>
+    (function () {
+        const cfg = window.LINKTREE_CONFIG || { stats: [], links: [], footer: {} };
+
+        document.getElementById('tagline-text').textContent = cfg.tagline || '';
+
+        document.getElementById('stats-row').innerHTML = (cfg.stats || []).map(s => `
+            <div class="stat-item">
+                <span class="stat-number">${s.number}</span>
+                <span class="stat-label">${s.label}</span>
+            </div>`).join('');
+
+        document.getElementById('links-list').innerHTML = (cfg.links || []).map(l => {
+            const badge = l.badge
+                ? `<span class="badge${l.badge.style === 'urgent' ? ' badge-urgent' : ''}">${l.badge.text}</span>`
+                : '';
+            return `
+                <a href="${l.url}" class="link-button">
+                    <div class="link-title">
+                        <span class="link-icon">${l.icon}</span>
+                        ${l.title}
+                        ${badge}
+                    </div>
+                    <div class="link-subtitle">${l.subtitle}</div>
+                </a>`;
+        }).join('');
+
+        const f = cfg.footer || {};
+        document.getElementById('footer-phone').textContent = f.phone || '';
+        document.getElementById('footer-address').textContent = f.address || '';
+        document.getElementById('footer-map-link').href = f.mapUrl || '#';
+        document.getElementById('footer-privacy').href = f.privacyUrl || '#';
+        document.getElementById('footer-terms').href = f.termsUrl || '#';
+        document.getElementById('footer-copyright').textContent = f.copyright || '';
+    })();
+    </script>
+</body>
+</html>
