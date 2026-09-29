@@ -103,6 +103,7 @@ body{font-family:'Inter',sans-serif}
 .lt-link-subtitle{font-size:10.5px;color:#4a5568;margin-left:22px;margin-top:2px;line-height:1.4}
 .lt-badge{display:inline-block;background:linear-gradient(135deg,#f1c819 0,#f39c12 100%);color:#00215c;font-size:8px;font-weight:700;padding:3px 6px;border-radius:8px;text-transform:uppercase}
 .lt-badge-urgent{background:linear-gradient(135deg,#ff4757 0,#e84118 100%);color:#fff}
+.lt-badge-green{background:linear-gradient(135deg,#2ecc71 0,#27ae60 100%);color:#fff}
 .lt-footer{text-align:center;color:#fff;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)}
 .lt-contact{font-size:13px;font-weight:600;color:#f1c819;margin-bottom:4px}
 .lt-address{font-size:10px;color:#fff;margin-bottom:10px}
@@ -227,6 +228,7 @@ function badgeStyleOptions(sel) {
     { v: 'none', l: 'No badge' },
     { v: 'normal', l: 'Normal (gold)' },
     { v: 'urgent', l: 'Urgent (red, pulsing)' },
+    { v: 'green', l: 'Green' },
   ];
   return opts.map(o => `<option value="${o.v}"${o.v === sel ? ' selected' : ''}>${o.l}</option>`).join('');
 }
@@ -312,8 +314,10 @@ function renderPreview() {
     <div><span class="lt-stat-number">${s.number}</span><div class="lt-stat-label">${s.label}</div></div>`).join('');
 
   document.getElementById('pv-links').innerHTML = links.map(l => {
+    const badgeClass = l.badge && l.badge.style === 'urgent' ? ' lt-badge-urgent'
+      : l.badge && l.badge.style === 'green' ? ' lt-badge-green' : '';
     const badge = l.badge
-      ? `<span class="lt-badge${l.badge.style === 'urgent' ? ' lt-badge-urgent' : ''}">${l.badge.text}</span>`
+      ? `<span class="lt-badge${badgeClass}">${l.badge.text}</span>`
       : '';
     return `
       <div class="lt-link">

@@ -161,6 +161,11 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
+        .badge-green {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+        }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.8; }
@@ -329,8 +334,10 @@
             </div>`).join('');
 
         document.getElementById('links-list').innerHTML = (cfg.links || []).map(l => {
+            const badgeClass = l.badge && l.badge.style === 'urgent' ? ' badge-urgent'
+                : l.badge && l.badge.style === 'green' ? ' badge-green' : '';
             const badge = l.badge
-                ? `<span class="badge${l.badge.style === 'urgent' ? ' badge-urgent' : ''}">${l.badge.text}</span>`
+                ? `<span class="badge${badgeClass}">${l.badge.text}</span>`
                 : '';
             return `
                 <a href="${l.url}" class="link-button">
