@@ -28,7 +28,8 @@ body{background:var(--shell-bg)}
 .shell-brand-name{font-size:13.5px;font-weight:800;color:#fff;line-height:1.25;white-space:nowrap}
 .shell-brand-sub{font-size:9.5px;color:var(--shell-sky);letter-spacing:.4px;margin-top:2px;white-space:nowrap}
 
-.shell-tree{display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
+.shell-groups{display:flex;flex-direction:column;gap:14px;flex:1;overflow-y:auto}
+.shell-tree{display:flex;flex-direction:column;gap:2px}
 .shell-tree-toggle{
   display:flex;align-items:center;gap:8px;padding:9px 8px;margin:0 0 4px;border-radius:8px;
   background:rgba(255,255,255,.05);cursor:pointer;border:none;width:100%;text-align:left;

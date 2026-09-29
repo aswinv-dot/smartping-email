@@ -5,6 +5,9 @@
     },
     "pages/api/email/send.js": {
       "maxDuration": 300
+    },
+    "pages/api/whatsapp/webhook.js": {
+      "maxDuration": 300
     }
   }
 }
