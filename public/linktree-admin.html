@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Linktree CMS — TerraTern</title>
+<link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shell.css"/>
+<style>
+:root{
+  --navy:#00215C;--blue:#255CC1;--sky:#9acbfd;--gold:#f1c819;
+  --bg:#f4f7fc;--surface:#fff;--border:#dde6f5;--text:#00215C;--muted:#5a7ab5;
+  --green:#16a34a;--red:#dc2626;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{font-family:'Inter',sans-serif}
+
+.cms-layout{display:flex;gap:0;min-height:100vh}
+.cms-editor{flex:1;min-width:0;padding:24px;max-width:640px}
+.cms-preview-pane{
+  flex:1;min-width:0;background:#1a3a8f;position:sticky;top:0;
+  height:100vh;overflow-y:auto;display:flex;justify-content:center;
+  padding:24px 0;
+}
+.cms-preview-frame{width:100%;max-width:420px;transform-origin:top center}
+
+.cms-title{font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:4px}
+.cms-sub{font-size:0.85rem;color:var(--muted);margin-bottom:24px}
+
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+.section-head{font-size:0.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:5px}
+.field label span{font-weight:400;color:var(--muted);font-size:0.72rem}
+.field input,.field textarea,.field select{
+  width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:14px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);
+  outline:none;transition:border-color .15s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--blue);background:#fff}
+.field textarea{resize:vertical;min-height:44px}
+.field-row{display:flex;gap:10px}
+.field-row .field{flex:1}
+
+.link-card{border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;position:relative;background:var(--bg)}
+.link-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.link-card-num{font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase}
+.link-card-actions{display:flex;gap:6px}
+.icon-btn{
+  background:#fff;border:1px solid var(--border);color:var(--muted);width:26px;height:26px;
+  border-radius:7px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;
+}
+.icon-btn:hover{border-color:var(--blue);color:var(--blue)}
+.icon-btn.danger:hover{border-color:var(--red);color:var(--red)}
+
+.add-link-btn{
+  width:100%;padding:12px;border:1.5px dashed var(--border);border-radius:10px;background:transparent;
+  color:var(--blue);font-weight:600;font-size:0.85rem;cursor:pointer;
+}
+.add-link-btn:hover{border-color:var(--blue);background:rgba(37,92,193,.05)}
+
+.save-bar{
+  position:sticky;bottom:0;background:#fff;border-top:1.5px solid var(--border);
+  padding:14px 0;margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.save-status{font-size:0.82rem;color:var(--muted)}
+.save-status.ok{color:var(--green);font-weight:600}
+.save-status.err{color:var(--red);font-weight:600}
+.save-btn{
+  background:var(--gold);color:var(--navy);font-weight:800;font-size:0.9rem;
+  padding:11px 24px;border:none;border-radius:10px;cursor:pointer;
+}
+.save-btn:hover{background:#c9a40f}
+.save-btn:disabled{opacity:.6;cursor:not-allowed}
+
+@media (max-width:900px){
+  .cms-layout{flex-direction:column}
+  .cms-preview-pane{position:static;height:auto;min-height:520px}
+}
+
+/* ---- Live preview (mirrors linktree.html's own styles) ---- */
+.lt-container{max-width:340px;width:100%;margin:0 auto;font-family:'Poppins',sans-serif;padding:24px 16px}
+.lt-logo{width:90px;height:90px;border-radius:16px;margin:0 auto 8px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.lt-logo img{width:100%;height:100%;object-fit:contain}
+.lt-tagline{text-align:center;color:#fff;margin-bottom:8px}
+.lt-tagline-main{font-size:14px;font-weight:600;margin-bottom:10px;line-height:1.4}
+.lt-stats{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.lt-stat-number{font-size:18px;font-weight:700;color:#f1c819;display:block;text-align:center}
+.lt-stat-label{font-size:10px;color:#9acbfd;margin-top:2px;text-align:center}
+.lt-links{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.lt-link{background:#fff;color:#00215c;padding:12px 14px;border-radius:10px;font-weight:500;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.lt-link-title{font-weight:600;font-size:13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lt-link-subtitle{font-size:10.5px;color:#4a5568;margin-left:22px;margin-top:2px;line-height:1.4}
+.lt-badge{display:inline-block;background:linear-gradient(135deg,#f1c819 0,#f39c12 100%);color:#00215c;font-size:8px;font-weight:700;padding:3px 6px;border-radius:8px;text-transform:uppercase}
+.lt-badge-urgent{background:linear-gradient(135deg,#ff4757 0,#e84118 100%);color:#fff}
+.lt-footer{text-align:center;color:#fff;margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.2)}
+.lt-contact{font-size:13px;font-weight:600;color:#f1c819;margin-bottom:4px}
+.lt-address{font-size:10px;color:#fff;margin-bottom:10px}
+.lt-footer-links{display:flex;justify-content:center;gap:14px;margin-bottom:8px}
+.lt-footer-link{color:#9acbfd;font-size:10px;text-decoration:none}
+.lt-copyright{font-size:9px;opacity:.8;color:#fff}
+</style>
+<script src="/shell.js" defer></script>
+</head>
+<body>
+
+<div class="cms-layout">
+  <div class="cms-editor">
+    <div class="cms-title">Linktree CMS</div>
+    <div class="cms-sub">Edit what shows on the public linktree page. Preview updates as you type — click Save to publish.</div>
+
+    <div class="section-card">
+      <div class="section-head">Tagline &amp; Stats</div>
+      <div class="field">
+        <label>Tagline</label>
+        <input type="text" id="f-tagline" oninput="renderPreview()"/>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Stat 1 Number</label>
+          <input type="text" id="f-stat1-num" oninput="renderPreview()"/>
+        </div>
+        <div class="field">
+          <label>Stat 1 Label</label>
+          <input type="text" id="f-stat1-label" oninput="renderPreview()"/>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Stat 2 Number</label>
+          <input type="text" id="f-stat2-num" oninput="renderPreview()"/>
+        </div>
+        <div class="field">
+          <label>Stat 2 Label</label>
+          <input type="text" id="f-stat2-label" oninput="renderPreview()"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <span>Links</span>
+      </div>
+      <div id="links-editor"></div>
+      <button class="add-link-btn" onclick="addLink()">+ Add Link</button>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">Footer</div>
+      <div class="field">
+        <label>Phone <span>shown with a 📞 prefix</span></label>
+        <input type="text" id="f-footer-phone" oninput="renderPreview()"/>
+      </div>
+      <div class="field">
+        <label>Address <span>shown with a 📍 prefix</span></label>
+        <input type="text" id="f-footer-address" oninput="renderPreview()"/>
+      </div>
+      <div class="field">
+        <label>Google Maps URL</label>
+        <input type="url" id="f-footer-map"/>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Privacy Policy URL</label>
+          <input type="url" id="f-footer-privacy"/>
+        </div>
+        <div class="field">
+          <label>Terms URL</label>
+          <input type="url" id="f-footer-terms"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>Copyright line</label>
+        <input type="text" id="f-footer-copyright" oninput="renderPreview()"/>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <div class="save-status" id="save-status">Loading…</div>
+      <button class="save-btn" id="save-btn" onclick="saveConfig()">Save and Go Live</button>
+    </div>
+  </div>
+
+  <div class="cms-preview-pane">
+    <div class="cms-preview-frame">
+      <div class="lt-container">
+        <div class="lt-logo"><img src="https://raw.githubusercontent.com/aswinv-dot/TerraTern-linktree/main/logo.png" alt="TerraTern"/></div>
+        <div class="lt-tagline">
+          <div class="lt-tagline-main" id="pv-tagline"></div>
+          <div class="lt-stats" id="pv-stats"></div>
+        </div>
+        <div class="lt-links" id="pv-links"></div>
+        <div class="lt-footer">
+          <div class="lt-contact" id="pv-phone"></div>
+          <div class="lt-address" id="pv-address"></div>
+          <div class="lt-footer-links">
+            <span class="lt-footer-link">Privacy Policy</span>
+            <span class="lt-footer-link">Terms &amp; Conditions</span>
+          </div>
+          <div class="lt-copyright" id="pv-copyright"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let links = [];
+
+function badgeStyleOptions(sel) {
+  const opts = [
+    { v: 'none', l: 'No badge' },
+    { v: 'normal', l: 'Normal (gold)' },
+    { v: 'urgent', l: 'Urgent (red, pulsing)' },
+  ];
+  return opts.map(o => `<option value="${o.v}"${o.v === sel ? ' selected' : ''}>${o.l}</option>`).join('');
+}
+
+function renderLinksEditor() {
+  const wrap = document.getElementById('links-editor');
+  wrap.innerHTML = links.map((l, i) => {
+    const badgeStyle = l.badge ? (l.badge.style || 'normal') : 'none';
+    return `
+      <div class="link-card">
+        <div class="link-card-head">
+          <span class="link-card-num">Link ${i + 1}</span>
+          <div class="link-card-actions">
+            <button class="icon-btn" title="Move up" onclick="moveLink(${i},-1)">↑</button>
+            <button class="icon-btn" title="Move down" onclick="moveLink(${i},1)">↓</button>
+            <button class="icon-btn danger" title="Delete" onclick="removeLink(${i})">✕</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field" style="flex:0 0 70px">
+            <label>Icon</label>
+            <input type="text" value="${l.icon || ''}" oninput="updateLink(${i},'icon',this.value)"/>
+          </div>
+          <div class="field">
+            <label>Title</label>
+            <input type="text" value="${l.title || ''}" oninput="updateLink(${i},'title',this.value)"/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Subtitle</label>
+          <input type="text" value="${l.subtitle || ''}" oninput="updateLink(${i},'subtitle',this.value)"/>
+        </div>
+        <div class="field">
+          <label>URL</label>
+          <input type="url" value="${l.url || ''}" oninput="updateLink(${i},'url',this.value)"/>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Badge style</label>
+            <select onchange="updateBadgeStyle(${i},this.value)">${badgeStyleOptions(badgeStyle)}</select>
+          </div>
+          <div class="field">
+            <label>Badge text</label>
+            <input type="text" value="${(l.badge && l.badge.text) || ''}" oninput="updateBadgeText(${i},this.value)"/>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  renderPreview();
+}
+
+function updateLink(i, key, val) { links[i][key] = val; renderPreview(); }
+function updateBadgeStyle(i, val) {
+  if (val === 'none') { delete links[i].badge; }
+  else { links[i].badge = { text: (links[i].badge && links[i].badge.text) || '', style: val }; }
+  renderLinksEditor();
+}
+function updateBadgeText(i, val) {
+  if (!links[i].badge) links[i].badge = { text: '', style: 'normal' };
+  links[i].badge.text = val;
+  renderPreview();
+}
+function moveLink(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= links.length) return;
+  [links[i], links[j]] = [links[j], links[i]];
+  renderLinksEditor();
+}
+function removeLink(i) { links.splice(i, 1); renderLinksEditor(); }
+function addLink() {
+  links.push({ icon: '🔗', title: 'New Link', subtitle: '', url: 'https://' });
+  renderLinksEditor();
+}
+
+function renderPreview() {
+  document.getElementById('pv-tagline').textContent = document.getElementById('f-tagline').value;
+
+  const stats = [
+    { number: document.getElementById('f-stat1-num').value, label: document.getElementById('f-stat1-label').value },
+    { number: document.getElementById('f-stat2-num').value, label: document.getElementById('f-stat2-label').value },
+  ];
+  document.getElementById('pv-stats').innerHTML = stats.map(s => `
+    <div><span class="lt-stat-number">${s.number}</span><div class="lt-stat-label">${s.label}</div></div>`).join('');
+
+  document.getElementById('pv-links').innerHTML = links.map(l => {
+    const badge = l.badge
+      ? `<span class="lt-badge${l.badge.style === 'urgent' ? ' lt-badge-urgent' : ''}">${l.badge.text}</span>`
+      : '';
+    return `
+      <div class="lt-link">
+        <div class="lt-link-title">${l.icon || ''} ${l.title || ''} ${badge}</div>
+        <div class="lt-link-subtitle">${l.subtitle || ''}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('pv-phone').textContent = document.getElementById('f-footer-phone').value;
+  document.getElementById('pv-address').textContent = document.getElementById('f-footer-address').value;
+  document.getElementById('pv-copyright').textContent = document.getElementById('f-footer-copyright').value;
+}
+
+function setField(id, val) { document.getElementById(id).value = val || ''; }
+
+async function loadConfig() {
+  try {
+    const res = await fetch('/api/linktree/config', { cache: 'no-store' });
+    const cfg = await res.json();
+
+    setField('f-tagline', cfg.tagline);
+    setField('f-stat1-num', cfg.stats && cfg.stats[0] && cfg.stats[0].number);
+    setField('f-stat1-label', cfg.stats && cfg.stats[0] && cfg.stats[0].label);
+    setField('f-stat2-num', cfg.stats && cfg.stats[1] && cfg.stats[1].number);
+    setField('f-stat2-label', cfg.stats && cfg.stats[1] && cfg.stats[1].label);
+
+    links = JSON.parse(JSON.stringify(cfg.links || []));
+    renderLinksEditor();
+
+    const f = cfg.footer || {};
+    setField('f-footer-phone', f.phone);
+    setField('f-footer-address', f.address);
+    setField('f-footer-map', f.mapUrl);
+    setField('f-footer-privacy', f.privacyUrl);
+    setField('f-footer-terms', f.termsUrl);
+    setField('f-footer-copyright', f.copyright);
+
+    setStatus('Loaded', 'ok');
+  } catch (e) {
+    setStatus('Could not load config', 'err');
+  }
+}
+
+async function saveConfig() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  setStatus('Saving…', '');
+
+  const payload = {
+    tagline: document.getElementById('f-tagline').value,
+    stats: [
+      { number: document.getElementById('f-stat1-num').value, label: document.getElementById('f-stat1-label').value },
+      { number: document.getElementById('f-stat2-num').value, label: document.getElementById('f-stat2-label').value },
+    ],
+    links: links,
+    footer: {
+      phone: document.getElementById('f-footer-phone').value,
+      address: document.getElementById('f-footer-address').value,
+      mapUrl: document.getElementById('f-footer-map').value,
+      privacyUrl: document.getElementById('f-footer-privacy').value,
+      termsUrl: document.getElementById('f-footer-terms').value,
+      copyright: document.getElementById('f-footer-copyright').value,
+    },
+  };
+
+  try {
+    const res = await fetch('/api/linktree/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error();
+    setStatus('Saved and live!', 'ok');
+  } catch (e) {
+    setStatus('Save failed. Try again.', 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save and Go Live';
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'save-status ' + (cls || '');
+}
+
+loadConfig();
+</script>
+</body>
+</html>

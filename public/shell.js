@@ -37,6 +37,13 @@
         { label: 'Dashboard', href: '/capi-dashboard.html', icon: '📊' },
       ],
     },
+    {
+      id: 'linktree',
+      name: 'Social Media x Linktree',
+      links: [
+        { label: 'CMS', href: '/linktree-admin.html', icon: '🔗' },
+      ],
+    },
   ];
 
   function getPref(key, fallback) {
