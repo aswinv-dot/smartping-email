@@ -131,17 +131,12 @@ body{font-family:'Inter',sans-serif}
             <input type="url" id="f-whatsapp-channel" placeholder="https://chat.whatsapp.com/..."/>
           </div>
           <div class="field">
-            <label>Redirect URL (after registration)</label>
-            <input type="url" id="f-redirect-url" placeholder="https://..."/>
-          </div>
-          <div class="field">
             <label>Program name</label>
             <input type="text" id="f-program-name" placeholder="e.g. Ausbildung"/>
           </div>
-          <div class="field">
-            <label>Google Apps Script URL (leads submit here)</label>
-            <input type="url" id="f-google-script" placeholder="https://script.google.com/macros/s/.../exec"/>
-          </div>
+        </div>
+        <div class="leads-note" style="margin-top:-4px">
+          The Google Apps Script URL (where leads submit) is set via Vercel environment variables now, not here — see <code>WEBINAR_GOOGLE_SCRIPT_URL_AUSBILDUNG</code> / <code>WEBINAR_GOOGLE_SCRIPT_URL_GHC</code>. This keeps that internal write endpoint out of the public page source.
         </div>
 
         <div class="save-row">
@@ -194,7 +189,7 @@ async function copyPageUrl() {
 
 async function loadConfig() {
   ['f-speaker-name','f-speaker-role','f-webinar-title','f-webinar-date','f-webinar-time',
-   'f-webinar-platform','f-whatsapp-channel','f-redirect-url','f-program-name','f-google-script'
+   'f-webinar-platform','f-whatsapp-channel','f-program-name'
   ].forEach(id => document.getElementById(id).value = '');
   document.getElementById('img-preview').src = 'https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png';
   window._imgUrl = null;
@@ -215,9 +210,7 @@ async function loadConfig() {
       setField('f-webinar-time',     data.webinar_time);
       setField('f-webinar-platform', data.webinar_platform);
       setField('f-whatsapp-channel', data.whatsapp_channel);
-      setField('f-redirect-url',     data.redirect_url);
       setField('f-program-name',     data.program_name);
-      setField('f-google-script',    data.google_script_url);
       if (data.speaker_image) {
         document.getElementById('img-preview').src = data.speaker_image;
         window._imgUrl = data.speaker_image;
@@ -290,9 +283,7 @@ async function saveConfig() {
     webinar_time:      v('f-webinar-time'),
     webinar_platform:  v('f-webinar-platform'),
     whatsapp_channel:  v('f-whatsapp-channel'),
-    redirect_url:      v('f-redirect-url'),
     program_name:      v('f-program-name'),
-    google_script_url: v('f-google-script'),
     updated_at:        new Date().toISOString()
   };
 

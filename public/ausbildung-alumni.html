@@ -873,7 +873,8 @@
     btn.textContent = 'Submitting...';
     btn.disabled = true;
 
-    const payload = new URLSearchParams({
+    const payload = {
+      routeProgram: 'ausbildung',
       name,
       email,
       whatsapp: '91' + wa,
@@ -886,15 +887,15 @@
       utm_campaign:  _utm.utm_campaign,
       utm_adset:     _utm.utm_adset,
       utm_placement: _utm.utm_placement
-    });
+    };
 
     try {
-      await fetch(cfg.googleScriptURL, {
+      const res = await fetch('/api/webinar/submit-lead', {
         method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: payload.toString()
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
       });
+      if (!res.ok) throw new Error('submit failed');
       if (typeof fbq !== 'undefined') fbq('track', 'Lead');
       showPopup(name, cfg);
     } catch (err) {
