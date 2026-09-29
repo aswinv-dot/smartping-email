@@ -5,18 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Automation Hub</title>
 <link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<link rel="stylesheet" href="/shell.css"/>
+<script src="/shell.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#00215C;--blue:#255CC1;--bg:#f0f4fb;--surface:#fff;--border:#dde6f5;--text:#00215C;--muted:#5a7ab5;--green:#1a9e5c;--font:'Inter',system-ui,sans-serif}
 [data-theme='dark']{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--navy:#0f172a}
-[data-theme='dark'] .header{background:#0f172a}
 [data-theme='dark'] .card-title,.brand-name{color:var(--text)}
 [data-theme='dark'] .stat-val{color:var(--text)}
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;transition:background .2s}
-.header{background:var(--navy);padding:0 24px;height:52px;display:flex;align-items:center;gap:12px}
-.logo img{height:26px}
-.sub{font-size:11px;color:#9acbfd;letter-spacing:1px;text-transform:uppercase;flex:1}
-.theme-btn{background:transparent;border:1px solid rgba(154,203,253,.3);color:rgba(154,203,253,.8);padding:5px 10px;border-radius:20px;cursor:pointer;font-size:12px;font-family:var(--font)}
 .page{padding:32px 24px;max-width:960px;margin:0 auto}
 .brand-section{margin-bottom:36px}
 .brand-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1.5px solid var(--border)}
@@ -49,26 +46,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 (function(){
   const t=localStorage.getItem('theme')||'light';
   document.documentElement.setAttribute('data-theme',t);
-  window.toggleTheme=function(){
-    const c=document.documentElement.getAttribute('data-theme');
-    const n=c==='dark'?'light':'dark';
-    document.documentElement.setAttribute('data-theme',n);
-    localStorage.setItem('theme',n);
-    document.getElementById('theme-btn').textContent=n==='dark'?'☀️':'🌙';
-  };
-  document.addEventListener('DOMContentLoaded',()=>{
-    document.getElementById('theme-btn').textContent=t==='dark'?'☀️':'🌙';
-  });
 })();
 </script>
 </head>
 <body>
-<div class="header">
-  <div class="logo"><img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/></div>
-  <div class="sub">Automation Hub</div>
-  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">🌙</button>
-</div>
-
 <div class="page">
   <div class="brand-section">
     <div class="brand-header">
@@ -80,10 +61,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
       <a class="card" href="/email-automation.html">
         <div class="card-top"><span class="card-icon">🔁</span><span class="card-title">Email Automation</span></div>
         <div class="card-desc">A continuous drip sequence that advances the pool one step a day.</div>
-      </a>
-      <a class="card" href="/email-inbox.html">
-        <div class="card-top"><span class="card-icon">📥</span><span class="card-title">Email Inbox</span></div>
-        <div class="card-desc">Replies to emails you've sent, in one place.</div>
       </a>
       <a class="card" href="/analytics.html">
         <div class="card-top"><span class="card-icon">📧</span><span class="card-title">Email Marketing</span></div>

@@ -5,16 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Contacts — TerraTern</title>
 <link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<link rel="stylesheet" href="/shell.css"/>
+<script src="/shell.js" defer></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--navy:#00215C;--blue:#255CC1;--bg:#f0f4fb;--surface:#fff;--border:#dde6f5;--text:#00215C;--muted:#5a7ab5;--green:#1a9e5c;--red:#e03e3e;--font:'Inter',system-ui,sans-serif;--radius:8px}
 body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh}
-.header{background:var(--navy);padding:0 24px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
-.logo img{height:26px}
-.sub{font-size:11px;color:#9acbfd;letter-spacing:1px;text-transform:uppercase;flex:1}
-.nav-link{font-size:11px;color:#9acbfd;text-decoration:none;border:1px solid rgba(154,203,253,.3);padding:5px 12px;border-radius:6px}
-.nav-link:hover{background:rgba(154,203,253,.15)}
-.toolbar{padding:12px 20px;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:52px;z-index:40}
+.smtp-bar{background:var(--navy);padding:0 20px;height:40px;display:flex;align-items:center;justify-content:flex-end;position:sticky;top:0;z-index:50}
+.toolbar{padding:12px 20px;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:40px;z-index:40}
 .search{border:1.5px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;font-family:var(--font);outline:none;width:200px}
 .search:focus{border-color:var(--blue)}
 .sel{border:1.5px solid var(--border);border-radius:6px;padding:6px 10px;font-size:12px;font-family:var(--font);outline:none;background:#fff;cursor:pointer}
@@ -58,8 +56,7 @@ tr:hover td{background:#fafcff}
 .smtp-err{font-size:11px;color:#f87171;margin-top:8px;padding-top:8px;border-top:1px solid rgba(154,203,253,.1)}
 
 [data-theme='dark']{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--navy:#1e293b}
-[data-theme='dark'] .header{background:#0f172a}
-[data-theme='dark'] .tab-nav a.active{background:#e2e8f0;color:#0f172a}
+[data-theme='dark'] .smtp-bar{background:#0f172a}
 .theme-btn{background:transparent;border:1px solid rgba(154,203,253,.3);color:rgba(154,203,253,.8);padding:5px 10px;border-radius:20px;cursor:pointer;font-size:12px;font-family:var(--font);flex-shrink:0}
 .theme-btn:hover{background:rgba(154,203,253,.15)}
 </style>
@@ -67,15 +64,7 @@ tr:hover td{background:#fafcff}
 
 </head>
 <body>
-<div class="header">
-  <div class="logo"><img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/></div>
-  <div class="sub">Email Contacts</div>
-<nav class="tab-nav">
-  <a href="/home.html" class="">🏠 Home</a>
-  <a href="/contacts.html" class="active">👥 Contacts</a>
-  <a href="/compose.html" class="">✏️ Compose</a>
-  <a href="/analytics.html" class="">📊 Analytics</a>
-</nav>
+<div class="smtp-bar">
 <button class="smtp-pill checking" id="smtp-pill" onclick="toggleSMTPModal()"><span class="spin"></span> SMTP</button>
 <div class="smtp-modal" id="smtp-modal">
   <div class="smtp-modal-title">SMTP Connection</div>

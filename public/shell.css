@@ -1,0 +1,67 @@
+/* Shared app shell — sidebar nav + mobile topbar. Used by every page via
+   <link rel="stylesheet" href="/shell.css"> + <script src="/shell.js" defer></script>.
+   Keeps each page's own body content as-is; shell.js wraps it in .app-main. */
+:root{
+  --shell-navy:#00215C;--shell-navy2:#0a2d6e;--shell-blue:#255CC1;--shell-sky:#9acbfd;
+  --shell-bg:#f4f7fc;--shell-surface:#fff;--shell-border:#dde6f5;
+  --shell-text:#00215C;--shell-muted:#5a7ab5;--shell-green:#1a9e5c;
+  --shell-w:252px;
+}
+[data-theme='dark']{
+  --shell-bg:#0f172a;--shell-surface:#1e293b;--shell-border:#334155;--shell-text:#e2e8f0;--shell-muted:#94a3b8;
+}
+*{box-sizing:border-box}
+body{background:var(--shell-bg)}
+
+.shell-sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--shell-w);z-index:200;
+  background:linear-gradient(180deg,var(--shell-navy) 0%,var(--shell-navy2) 100%);
+  display:flex;flex-direction:column;padding:18px 14px;
+  box-shadow:2px 0 16px rgba(0,33,92,.12);
+  transition:transform .25s ease;
+  font-family:'Inter',system-ui,sans-serif;
+}
+.shell-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 18px;border-bottom:1px solid rgba(154,203,253,.15);margin-bottom:14px}
+.shell-brand img{height:30px;width:30px;border-radius:7px;object-fit:contain;background:#fff;padding:3px}
+.shell-brand-name{font-size:14px;font-weight:800;color:#fff;line-height:1.2}
+.shell-brand-sub{font-size:9.5px;color:var(--shell-sky);letter-spacing:.5px;margin-top:2px}
+
+.shell-crumb{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(154,203,253,.55);font-weight:700;padding:0 8px;margin-bottom:6px}
+.shell-tree-brand{display:flex;align-items:center;gap:8px;padding:8px 8px;margin:0 0 6px;border-radius:8px;background:rgba(255,255,255,.04)}
+.shell-tree-brand-dot{width:7px;height:7px;border-radius:50%;background:var(--shell-green);flex-shrink:0}
+.shell-tree-brand-name{font-size:12.5px;font-weight:700;color:#fff}
+
+.shell-nav{display:flex;flex-direction:column;gap:2px;margin-left:6px;padding-left:12px;border-left:1.5px solid rgba(154,203,253,.18)}
+.shell-link{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  color:rgba(230,240,255,.75);text-decoration:none;font-size:13px;font-weight:600;
+  transition:background .15s,color .15s;white-space:nowrap;
+}
+.shell-link:hover{background:rgba(255,255,255,.08);color:#fff}
+.shell-link.active{background:#fff;color:var(--shell-navy)}
+.shell-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
+
+.shell-footer{margin-top:auto;padding:12px 8px 4px;border-top:1px solid rgba(154,203,253,.15)}
+.shell-status{font-size:11px;color:var(--shell-sky);display:flex;align-items:center;gap:6px}
+.shell-status .dot{width:7px;height:7px;border-radius:50%;background:var(--shell-green)}
+.shell-status.down .dot{background:#e03e3e}
+
+.shell-topbar{
+  display:none;position:sticky;top:0;z-index:150;height:52px;align-items:center;gap:12px;
+  background:var(--shell-navy);padding:0 14px;box-shadow:0 2px 8px rgba(0,33,92,.15);
+}
+.shell-hamburger{background:transparent;border:none;color:#fff;font-size:20px;cursor:pointer;padding:6px;line-height:1}
+.shell-topbar-title{color:#fff;font-size:14px;font-weight:700;flex:1}
+.shell-theme-btn{background:transparent;border:1px solid rgba(154,203,253,.3);color:rgba(154,203,253,.9);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:12px}
+
+.shell-overlay{display:none;position:fixed;inset:0;background:rgba(0,10,40,.4);z-index:190}
+.shell-overlay.open{display:block}
+
+.app-main{margin-left:var(--shell-w);min-height:100vh}
+
+@media (max-width:900px){
+  .shell-sidebar{transform:translateX(-100%)}
+  .shell-sidebar.open{transform:translateX(0)}
+  .shell-topbar{display:flex}
+  .app-main{margin-left:0}
+}
