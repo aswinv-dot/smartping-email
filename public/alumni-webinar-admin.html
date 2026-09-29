@@ -25,6 +25,10 @@ body{font-family:'Inter',sans-serif}
   padding:40px 24px;
 }
 .cms-preview-card{width:100%;max-width:360px;align-self:flex-start}
+.pv-section-label{color:rgba(255,255,255,0.55);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin:20px 0 8px}
+.pv-refresh-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;margin-left:8px}
+.pv-full-frame-wrap{background:#fff;border-radius:14px;overflow:hidden;height:520px;position:relative}
+.pv-full-frame{width:400%;height:400%;transform:scale(0.25);transform-origin:top left;border:none}
 .pv-hero{
   background:linear-gradient(160deg,#00215c 0%,#0a3278 100%);color:#fff;
   border-radius:20px;padding:24px 20px;position:relative;overflow:hidden;
@@ -190,6 +194,14 @@ body{font-family:'Inter',sans-serif}
               <div class="pv-pill" id="prev-time">🕐 Time</div>
             </div>
           </div>
+
+          <div class="pv-section-label">
+            Full page preview (live page — save to update)
+            <button class="pv-refresh-btn" onclick="refreshFullPreview()">🔄 Refresh</button>
+          </div>
+          <div class="pv-full-frame-wrap">
+            <iframe class="pv-full-frame" id="full-preview-frame" title="Full page preview"></iframe>
+          </div>
         </div>
       </div>
     </div>
@@ -200,7 +212,7 @@ body{font-family:'Inter',sans-serif}
 const SUPABASE_URL = 'https://otzmitwvvetdzheogtkr.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90em1pdHd2dmV0ZHpoZW9ndGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjAzNTUsImV4cCI6MjA5NjgzNjM1NX0.YQwCTN7cxq0Zo0e66_Kl2yAmN0okWyqpTq-ktgexlig';
 const BUCKET = 'webinar-assets';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = (typeof supabase !== 'undefined') ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 const PROGRAMS = {
   ausbildung: { id: 1, page: 'ausbildung-alumni.html', label: 'Ausbildung Alumni' },
@@ -215,6 +227,12 @@ function switchProgram(p) {
   document.getElementById('tab-ausbildung').classList.toggle('active', p === 'ausbildung');
   document.getElementById('tab-ghc').classList.toggle('active', p === 'ghc');
   loadConfig();
+  refreshFullPreview();
+}
+
+function refreshFullPreview() {
+  const url = window.location.origin + '/' + PROGRAMS[currentProgram].page + '?preview=' + Date.now();
+  document.getElementById('full-preview-frame').src = url;
 }
 
 async function copyPageUrl() {
@@ -309,6 +327,12 @@ async function uploadImage(input) {
   const ext = file.name.split('.').pop();
   const fileName = `speaker-${currentProgram}-${Date.now()}.${ext}`;
 
+  if (!sb) {
+    status.textContent = 'Upload failed. Try again.';
+    status.className = 'upload-status err';
+    return;
+  }
+
   const { error } = await sb.storage
     .from(BUCKET)
     .upload(fileName, file, { upsert: true, contentType: file.type });
@@ -355,14 +379,16 @@ async function saveConfig() {
     Object.entries(raw).filter(([k, val]) => k === 'id' || (val !== null && val !== undefined))
   );
 
-  const { error } = await sb
-    .from('webinar_config')
-    .upsert(payload, { onConflict: 'id' });
-
-  if (error) {
-    setStatus('Save failed. Try again.', 'err');
-  } else {
+  try {
+    if (!sb) throw new Error('Supabase client not loaded');
+    const { error } = await sb
+      .from('webinar_config')
+      .upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
     setStatus('Saved and live!', 'ok');
+    refreshFullPreview();
+  } catch (e) {
+    setStatus('Save failed. Try again.', 'err');
   }
 
   btn.disabled = false;
@@ -381,6 +407,7 @@ function setStatus(msg, cls) {
 }
 
 loadConfig();
+refreshFullPreview();
 </script>
 </body>
 </html>
