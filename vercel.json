@@ -1,8 +1,5 @@
 {
   "trailingSlash": false,
-  "rewrites": [
-    { "source": "/", "destination": "/home.html" }
-  ],
   "functions": {
     "pages/api/cron-simple.js": {
       "maxDuration": 300
