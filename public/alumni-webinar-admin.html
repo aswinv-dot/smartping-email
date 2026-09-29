@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Alumni Webinar CMS — TerraTern</title>
+<link rel="icon" type="image/png" href="https://terratern.com/images/favicon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/shell.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --navy:#00215C;--blue:#255CC1;--sky:#9acbfd;--gold:#f1c819;
+  --bg:#f4f7fc;--surface:#fff;--border:#dde6f5;--text:#00215C;--muted:#5a7ab5;
+  --green:#16a34a;--red:#dc2626;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{font-family:'Inter',sans-serif}
+
+.cms-layout{display:flex;gap:0;min-height:100vh}
+.cms-editor{flex:1;min-width:0;padding:24px;max-width:640px}
+.cms-preview-pane{
+  flex:1;min-width:0;background:#1a3a8f;position:sticky;top:0;
+  height:100vh;overflow-y:auto;display:flex;justify-content:center;
+  padding:40px 24px;
+}
+.cms-preview-card{width:100%;max-width:360px;background:rgba(255,255,255,0.06);border-radius:20px;padding:24px;align-self:flex-start}
+
+.cms-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.cms-title{font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:4px}
+.cms-sub{font-size:0.85rem;color:var(--muted);margin-bottom:0}
+
+.copy-link-btn{background:#fff;border:1.5px solid var(--border);color:var(--navy);font-weight:700;font-size:0.8rem;padding:9px 14px;border-radius:9px;cursor:pointer;white-space:nowrap}
+.copy-link-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+.program-tabs{display:flex;gap:8px;margin-bottom:24px}
+.program-tab{flex:1;background:#fff;border:1.5px solid var(--border);color:var(--muted);font-weight:700;font-size:0.85rem;padding:11px;border-radius:10px;cursor:pointer;text-align:center}
+.program-tab.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+.field{margin-bottom:14px}
+.field:last-child{margin-bottom:0}
+.field label{display:block;font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:6px}
+.field input,.field textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;
+  font-size:0.85rem;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);outline:none;
+}
+.field input:focus,.field textarea:focus{border-color:var(--blue);background:#fff}
+.field textarea{resize:vertical;min-height:56px}
+
+.img-row{display:flex;align-items:center;gap:12px}
+.img-preview-box{width:56px;height:56px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);flex-shrink:0;background:var(--bg)}
+.upload-status{font-size:0.72rem;color:var(--muted);margin-top:4px}
+.upload-status.ok{color:var(--green)}
+.upload-status.err{color:var(--red)}
+
+.save-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:4px}
+.save-status{font-size:0.8rem;color:var(--muted)}
+.save-status.ok{color:var(--green)}
+.save-status.err{color:var(--red)}
+.save-btn{background:var(--navy);color:#fff;font-weight:700;font-size:0.9rem;padding:12px 20px;border:none;border-radius:10px;cursor:pointer}
+.save-btn:disabled{opacity:0.6;cursor:not-allowed}
+
+.leads-note{background:#fff8e1;border:1px solid #f1c819;border-radius:12px;padding:14px 16px;font-size:0.8rem;color:#5a4b00;margin-bottom:20px;line-height:1.5}
+.leads-note a{color:var(--blue);font-weight:700}
+
+/* PREVIEW CARD */
+.pv-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:rgba(255,255,255,0.1);margin-bottom:14px}
+.pv-name{font-weight:700;color:#fff;font-size:1rem}
+.pv-role{font-size:0.78rem;color:var(--sky);margin-top:3px}
+.pv-date{font-size:0.78rem;color:rgba(255,255,255,0.6);margin-top:3px}
+.pv-title{font-size:0.95rem;font-weight:700;color:#fff;margin-top:16px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="shell-app">
+  <div id="shell-sidebar"></div>
+  <div class="shell-main">
+    <div class="cms-layout">
+      <div class="cms-editor">
+        <div class="cms-title-row">
+          <div>
+            <div class="cms-title">Alumni Webinar CMS</div>
+            <div class="cms-sub">Edit speaker, webinar details and CTA for each alumni webinar page</div>
+          </div>
+          <button class="copy-link-btn" id="copy-link-btn" onclick="copyPageUrl()">🔗 Copy Link</button>
+        </div>
+
+        <div class="program-tabs">
+          <button class="program-tab active" id="tab-ausbildung" onclick="switchProgram('ausbildung')">Ausbildung Alumni</button>
+          <button class="program-tab" id="tab-ghc" onclick="switchProgram('ghc')">GHC Alumni</button>
+        </div>
+
+        <div class="leads-note">
+          Registrations submit to a Google Apps Script endpoint (set below), which is expected to write into a Google Sheet on the connected Google account. This CMS has no direct visibility into that Sheet — open the Apps Script project bound to the <code>googleScriptURL</code> below in Google Drive/Apps Script to find its linked spreadsheet.
+        </div>
+
+        <div class="section-card">
+          <div class="field img-row">
+            <img class="img-preview-box" id="img-preview" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
+            <div>
+              <input type="file" id="img-file" accept="image/*" onchange="uploadImage(this)"/>
+              <div class="upload-status" id="upload-status">JPG or PNG, square crop recommended</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="field">
+            <label>Speaker name</label>
+            <input type="text" id="f-speaker-name" placeholder="e.g. Rushikesh Jadhav" oninput="livePreview()"/>
+          </div>
+          <div class="field">
+            <label>Speaker role</label>
+            <input type="text" id="f-speaker-role" placeholder="e.g. Ausbildung Graduate · Working in Germany" oninput="livePreview()"/>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="field">
+            <label>Webinar title</label>
+            <textarea id="f-webinar-title" placeholder="e.g. How I Moved to Germany and Earn 3L/Month" oninput="livePreview()"></textarea>
+          </div>
+          <div class="field">
+            <label>Webinar date</label>
+            <input type="text" id="f-webinar-date" placeholder="e.g. Friday, 26th June 2026" oninput="livePreview()"/>
+          </div>
+          <div class="field">
+            <label>Webinar time</label>
+            <input type="text" id="f-webinar-time" placeholder="e.g. 7:00 PM IST" oninput="livePreview()"/>
+          </div>
+          <div class="field">
+            <label>Webinar platform</label>
+            <input type="text" id="f-webinar-platform" placeholder="e.g. Zoom (Link sent after registration)"/>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <div class="field">
+            <label>WhatsApp channel link</label>
+            <input type="url" id="f-whatsapp-channel" placeholder="https://chat.whatsapp.com/..."/>
+          </div>
+          <div class="field">
+            <label>Redirect URL (after registration)</label>
+            <input type="url" id="f-redirect-url" placeholder="https://..."/>
+          </div>
+          <div class="field">
+            <label>Program name</label>
+            <input type="text" id="f-program-name" placeholder="e.g. Ausbildung"/>
+          </div>
+          <div class="field">
+            <label>Google Apps Script URL (leads submit here)</label>
+            <input type="url" id="f-google-script" placeholder="https://script.google.com/macros/s/.../exec"/>
+          </div>
+        </div>
+
+        <div class="save-row">
+          <div class="save-status" id="save-status">Ready</div>
+          <button class="save-btn" id="save-btn" onclick="saveConfig()">Save and Go Live</button>
+        </div>
+      </div>
+
+      <div class="cms-preview-pane">
+        <div class="cms-preview-card">
+          <img class="pv-avatar" id="prev-img" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
+          <div class="pv-name" id="prev-name">Speaker Name</div>
+          <div class="pv-role" id="prev-role">Role</div>
+          <div class="pv-date" id="prev-date">Date and Time</div>
+          <div class="pv-title" id="prev-title">Webinar title preview</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/shell.js"></script>
+<script>
+const SUPABASE_URL = 'https://otzmitwvvetdzheogtkr.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90em1pdHd2dmV0ZHpoZW9ndGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjAzNTUsImV4cCI6MjA5NjgzNjM1NX0.YQwCTN7cxq0Zo0e66_Kl2yAmN0okWyqpTq-ktgexlig';
+const BUCKET = 'webinar-assets';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const PROGRAMS = {
+  ausbildung: { id: 1, page: 'ausbildung-alumni.html', label: 'Ausbildung Alumni' },
+  ghc:        { id: 2, page: 'ghc-alum.html',          label: 'GHC Alumni' },
+};
+let currentProgram = 'ausbildung';
+
+function currentRowId() { return PROGRAMS[currentProgram].id; }
+
+function switchProgram(p) {
+  currentProgram = p;
+  document.getElementById('tab-ausbildung').classList.toggle('active', p === 'ausbildung');
+  document.getElementById('tab-ghc').classList.toggle('active', p === 'ghc');
+  loadConfig();
+}
+
+async function copyPageUrl() {
+  const url = window.location.origin + '/' + PROGRAMS[currentProgram].page;
+  const btn = document.getElementById('copy-link-btn');
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  const original = btn.textContent;
+  btn.textContent = '✓ Copied!';
+  setTimeout(() => { btn.textContent = original; }, 1800);
+}
+
+async function loadConfig() {
+  ['f-speaker-name','f-speaker-role','f-webinar-title','f-webinar-date','f-webinar-time',
+   'f-webinar-platform','f-whatsapp-channel','f-redirect-url','f-program-name','f-google-script'
+  ].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('img-preview').src = 'https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png';
+  document.getElementById('prev-img').src    = 'https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png';
+  window._imgUrl = null;
+
+  try {
+    const { data, error } = await sb
+      .from('webinar_config')
+      .select('*')
+      .eq('id', currentRowId())
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) {
+      setField('f-speaker-name',     data.speaker_name);
+      setField('f-speaker-role',     data.speaker_role);
+      setField('f-webinar-title',    data.webinar_title);
+      setField('f-webinar-date',     data.webinar_date);
+      setField('f-webinar-time',     data.webinar_time);
+      setField('f-webinar-platform', data.webinar_platform);
+      setField('f-whatsapp-channel', data.whatsapp_channel);
+      setField('f-redirect-url',     data.redirect_url);
+      setField('f-program-name',     data.program_name);
+      setField('f-google-script',    data.google_script_url);
+      if (data.speaker_image) {
+        document.getElementById('img-preview').src = data.speaker_image;
+        document.getElementById('prev-img').src    = data.speaker_image;
+        window._imgUrl = data.speaker_image;
+      }
+      livePreview();
+      setStatus('All changes saved', 'ok');
+    } else {
+      livePreview();
+      setStatus('No saved config yet for this program — fill in and save', '');
+    }
+  } catch (e) {
+    setStatus('Could not load config', 'err');
+  }
+}
+
+function setField(id, val) {
+  if (val !== null && val !== undefined) document.getElementById(id).value = val;
+}
+
+function livePreview() {
+  const name  = document.getElementById('f-speaker-name').value;
+  const role  = document.getElementById('f-speaker-role').value;
+  const date  = document.getElementById('f-webinar-date').value;
+  const time  = document.getElementById('f-webinar-time').value;
+  const title = document.getElementById('f-webinar-title').value;
+  document.getElementById('prev-name').textContent  = name || 'Speaker Name';
+  document.getElementById('prev-role').textContent  = role || 'Role';
+  document.getElementById('prev-date').textContent  = (date || time) ? `${date} at ${time}` : 'Date and Time';
+  document.getElementById('prev-title').textContent = title || 'Webinar title preview';
+  setStatus('Unsaved changes', '');
+}
+
+async function uploadImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const status = document.getElementById('upload-status');
+  status.textContent = 'Uploading...';
+  status.className = 'upload-status';
+
+  const ext = file.name.split('.').pop();
+  const fileName = `speaker-${currentProgram}-${Date.now()}.${ext}`;
+
+  const { error } = await sb.storage
+    .from(BUCKET)
+    .upload(fileName, file, { upsert: true, contentType: file.type });
+
+  if (error) {
+    status.textContent = 'Upload failed. Try again.';
+    status.className = 'upload-status err';
+    return;
+  }
+
+  const { data } = sb.storage.from(BUCKET).getPublicUrl(fileName);
+  window._imgUrl = data.publicUrl;
+  document.getElementById('img-preview').src = data.publicUrl;
+  document.getElementById('prev-img').src    = data.publicUrl;
+  status.textContent = 'Photo uploaded successfully';
+  status.className   = 'upload-status ok';
+  setStatus('Unsaved changes', '');
+}
+
+async function saveConfig() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  setStatus('Saving...', '');
+
+  const rowId = currentRowId();
+  const raw = {
+    id:                rowId,
+    speaker_name:      v('f-speaker-name'),
+    speaker_role:      v('f-speaker-role'),
+    speaker_image:     window._imgUrl || null,
+    webinar_title:     v('f-webinar-title'),
+    webinar_date:      v('f-webinar-date'),
+    webinar_time:      v('f-webinar-time'),
+    webinar_platform:  v('f-webinar-platform'),
+    whatsapp_channel:  v('f-whatsapp-channel'),
+    redirect_url:      v('f-redirect-url'),
+    program_name:      v('f-program-name'),
+    google_script_url: v('f-google-script'),
+    updated_at:        new Date().toISOString()
+  };
+
+  const payload = Object.fromEntries(
+    Object.entries(raw).filter(([k, val]) => k === 'id' || (val !== null && val !== undefined))
+  );
+
+  const { error } = await sb
+    .from('webinar_config')
+    .upsert(payload, { onConflict: 'id' });
+
+  if (error) {
+    setStatus('Save failed. Try again.', 'err');
+  } else {
+    setStatus('Saved and live!', 'ok');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save and Go Live';
+}
+
+function v(id) {
+  const val = document.getElementById(id).value.trim();
+  return val || null;
+}
+
+function setStatus(msg, cls) {
+  const el = document.getElementById('save-status');
+  el.textContent = msg;
+  el.className = 'save-status ' + (cls || '');
+}
+
+loadConfig();
+</script>
+</body>
+</html>

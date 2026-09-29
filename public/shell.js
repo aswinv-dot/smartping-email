@@ -48,8 +48,7 @@
       id: 'alumni-webinar',
       name: 'Ops x Alumni Webinar',
       links: [
-        { label: 'GHC Alumni Webinar', href: '/ghc-alum.html', icon: '🎓' },
-        { label: 'Ausbildung Alumni Webinar', href: '/ausbildung-alumni.html', icon: '🎓' },
+        { label: 'CMS', href: '/alumni-webinar-admin.html', icon: '🎓' },
       ],
     },
   ];
