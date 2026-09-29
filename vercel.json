@@ -1,4 +1,11 @@
 {
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "pages.terratern.com" }],
+      "destination": "/linktree.html"
+    }
+  ],
   "functions": {
     "pages/api/cron-simple.js": {
       "maxDuration": 300
