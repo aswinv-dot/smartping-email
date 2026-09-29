@@ -5,7 +5,7 @@
   --shell-navy:#00215C;--shell-navy2:#0a2d6e;--shell-blue:#255CC1;--shell-sky:#9acbfd;
   --shell-bg:#f4f7fc;--shell-surface:#fff;--shell-border:#dde6f5;
   --shell-text:#00215C;--shell-muted:#5a7ab5;--shell-green:#1a9e5c;
-  --shell-w:252px;
+  --shell-w:252px;--shell-w-collapsed:68px;
 }
 [data-theme='dark']{
   --shell-bg:#0f172a;--shell-surface:#1e293b;--shell-border:#334155;--shell-text:#e2e8f0;--shell-muted:#94a3b8;
@@ -18,20 +18,30 @@ body{background:var(--shell-bg)}
   background:linear-gradient(180deg,var(--shell-navy) 0%,var(--shell-navy2) 100%);
   display:flex;flex-direction:column;padding:18px 14px;
   box-shadow:2px 0 16px rgba(0,33,92,.12);
-  transition:transform .25s ease;
+  transition:width .2s ease,transform .25s ease;
   font-family:'Inter',system-ui,sans-serif;
+  overflow:hidden;
 }
-.shell-brand{display:flex;align-items:center;gap:10px;padding:8px 8px 18px;border-bottom:1px solid rgba(154,203,253,.15);margin-bottom:14px}
-.shell-brand img{height:30px;width:30px;border-radius:7px;object-fit:contain;background:#fff;padding:3px}
-.shell-brand-name{font-size:14px;font-weight:800;color:#fff;line-height:1.2}
-.shell-brand-sub{font-size:9.5px;color:var(--shell-sky);letter-spacing:.5px;margin-top:2px}
+.shell-brand{display:flex;align-items:center;gap:10px;padding:8px 4px 18px;border-bottom:1px solid rgba(154,203,253,.15);margin-bottom:10px}
+.shell-brand img{height:30px;width:30px;border-radius:7px;object-fit:contain;background:#fff;padding:3px;flex-shrink:0}
+.shell-brand-text{min-width:0;overflow:hidden}
+.shell-brand-name{font-size:13.5px;font-weight:800;color:#fff;line-height:1.25;white-space:nowrap}
+.shell-brand-sub{font-size:9.5px;color:var(--shell-sky);letter-spacing:.4px;margin-top:2px;white-space:nowrap}
 
-.shell-crumb{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(154,203,253,.55);font-weight:700;padding:0 8px;margin-bottom:6px}
-.shell-tree-brand{display:flex;align-items:center;gap:8px;padding:8px 8px;margin:0 0 6px;border-radius:8px;background:rgba(255,255,255,.04)}
-.shell-tree-brand-dot{width:7px;height:7px;border-radius:50%;background:var(--shell-green);flex-shrink:0}
-.shell-tree-brand-name{font-size:12.5px;font-weight:700;color:#fff}
+.shell-tree{display:flex;flex-direction:column;gap:2px;flex:1;overflow-y:auto}
+.shell-tree-toggle{
+  display:flex;align-items:center;gap:8px;padding:9px 8px;margin:0 0 4px;border-radius:8px;
+  background:rgba(255,255,255,.05);cursor:pointer;border:none;width:100%;text-align:left;
+  font-family:inherit;
+}
+.shell-tree-toggle:hover{background:rgba(255,255,255,.09)}
+.shell-tree-dot{width:7px;height:7px;border-radius:50%;background:var(--shell-green);flex-shrink:0}
+.shell-tree-name{font-size:12.5px;font-weight:700;color:#fff;flex:1;white-space:nowrap;overflow:hidden}
+.shell-chevron{font-size:10px;color:rgba(154,203,253,.7);transition:transform .15s;flex-shrink:0}
+.shell-chevron.rot{transform:rotate(90deg)}
 
-.shell-nav{display:flex;flex-direction:column;gap:2px;margin-left:6px;padding-left:12px;border-left:1.5px solid rgba(154,203,253,.18)}
+.shell-nav{display:flex;flex-direction:column;gap:2px;margin-left:9px;padding-left:12px;border-left:1.5px solid rgba(154,203,253,.18);overflow:hidden;transition:max-height .18s ease}
+.shell-nav.collapsed{display:none}
 .shell-link{
   display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
   color:rgba(230,240,255,.75);text-decoration:none;font-size:13px;font-weight:600;
@@ -41,10 +51,16 @@ body{background:var(--shell-bg)}
 .shell-link.active{background:#fff;color:var(--shell-navy)}
 .shell-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
 
-.shell-footer{margin-top:auto;padding:12px 8px 4px;border-top:1px solid rgba(154,203,253,.15)}
-.shell-status{font-size:11px;color:var(--shell-sky);display:flex;align-items:center;gap:6px}
-.shell-status .dot{width:7px;height:7px;border-radius:50%;background:var(--shell-green)}
+.shell-footer{margin-top:auto;padding:12px 4px 4px;border-top:1px solid rgba(154,203,253,.15);display:flex;align-items:center;gap:8px}
+.shell-status{font-size:11px;color:var(--shell-sky);display:flex;align-items:center;gap:6px;flex:1;overflow:hidden;white-space:nowrap}
+.shell-status .dot{width:7px;height:7px;border-radius:50%;background:var(--shell-green);flex-shrink:0}
 .shell-status.down .dot{background:#e03e3e}
+.shell-collapse-btn{
+  background:rgba(255,255,255,.06);border:1px solid rgba(154,203,253,.2);color:rgba(154,203,253,.9);
+  width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.shell-collapse-btn:hover{background:rgba(255,255,255,.12)}
 
 .shell-topbar{
   display:none;position:sticky;top:0;z-index:150;height:52px;align-items:center;gap:12px;
@@ -57,11 +73,31 @@ body{background:var(--shell-bg)}
 .shell-overlay{display:none;position:fixed;inset:0;background:rgba(0,10,40,.4);z-index:190}
 .shell-overlay.open{display:block}
 
-.app-main{margin-left:var(--shell-w);min-height:100vh}
+.app-main{margin-left:var(--shell-w);min-height:100vh;transition:margin-left .2s ease}
+
+/* Desktop collapsed state — icon rail only */
+.shell-sidebar.collapsed{width:var(--shell-w-collapsed);padding:18px 10px}
+.shell-sidebar.collapsed .shell-brand-text,
+.shell-sidebar.collapsed .shell-tree-name,
+.shell-sidebar.collapsed .shell-chevron,
+.shell-sidebar.collapsed .shell-link span:last-child,
+.shell-sidebar.collapsed .shell-status span:last-child{display:none}
+.shell-sidebar.collapsed .shell-nav{margin-left:0;padding-left:0;border-left:none}
+.shell-sidebar.collapsed .shell-link,
+.shell-sidebar.collapsed .shell-tree-toggle{justify-content:center}
+.shell-sidebar.collapsed ~ .app-main{margin-left:var(--shell-w-collapsed)}
+.shell-sidebar.collapsed .shell-collapse-btn{transform:rotate(180deg)}
+.shell-sidebar.collapsed .shell-footer{justify-content:center}
 
 @media (max-width:900px){
-  .shell-sidebar{transform:translateX(-100%)}
+  .shell-sidebar{transform:translateX(-100%);width:var(--shell-w) !important;padding:18px 14px !important}
   .shell-sidebar.open{transform:translateX(0)}
+  .shell-sidebar.collapsed .shell-brand-text,
+  .shell-sidebar.collapsed .shell-tree-name,
+  .shell-sidebar.collapsed .shell-chevron,
+  .shell-sidebar.collapsed .shell-link span:last-child,
+  .shell-sidebar.collapsed .shell-status span:last-child{display:revert}
+  .shell-sidebar.collapsed .shell-nav{margin-left:9px;padding-left:12px;border-left:1.5px solid rgba(154,203,253,.18)}
   .shell-topbar{display:flex}
-  .app-main{margin-left:0}
+  .app-main,.shell-sidebar.collapsed ~ .app-main{margin-left:0}
 }
