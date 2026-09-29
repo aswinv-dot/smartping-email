@@ -1,5 +1,5 @@
 // pages/api/rules/[id].js
-import { updateRule, deleteRule } from "../../../../lib/whatsapp-supabase";
+import { updateRule, deleteRule } from "../../../../lib/whatsapp-gas";
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin","*");

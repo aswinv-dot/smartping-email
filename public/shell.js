@@ -7,7 +7,7 @@
   const GROUPS = [
     {
       id: 'email',
-      name: 'SmartPing x TerraTern',
+      name: 'Email x SmartPing',
       links: [
         { label: 'Dashboard', href: '/home.html', icon: '🏠' },
         { label: 'Automation', href: '/email-automation.html', icon: '🔁' },
