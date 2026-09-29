@@ -30,14 +30,14 @@
       <div class="shell-brand">
         <img src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/>
         <div class="shell-brand-text">
-          <div class="shell-brand-name">Email Drip Marketing</div>
+          <div class="shell-brand-name">Marketing CRM</div>
           <div class="shell-brand-sub">TerraTern-SmartPing</div>
         </div>
       </div>
       <div class="shell-tree">
         <button class="shell-tree-toggle" id="shell-tree-toggle" type="button" aria-expanded="${treeOpen}">
           <span class="shell-tree-dot"></span>
-          <span class="shell-tree-name">TerraTern</span>
+          <span class="shell-tree-name">SmartPing x TerraTern</span>
           <span class="shell-chevron${treeOpen ? ' rot' : ''}">▶</span>
         </button>
         <nav class="shell-nav${treeOpen ? '' : ' collapsed'}" id="shell-nav">${links}</nav>

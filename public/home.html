@@ -41,6 +41,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .coming-soon{position:absolute;top:12px;right:12px;font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;background:#f0f4fb;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;width:8px;height:8px;border:1.5px solid rgba(90,122,181,.3);border-top-color:var(--muted);border-radius:50%;animation:spin .7s linear infinite}
+
+.section-title{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
+.stat-tile{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:16px 18px}
+.stat-tile .tv{font-size:22px;font-weight:800;color:var(--navy)}
+.stat-tile .tl{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:4px}
+.stat-tile .td{font-size:10px;font-weight:700;margin-top:6px}
+.stat-tile .td.up{color:var(--green)}
+.stat-tile .td.flat{color:var(--muted)}
+.reports-panel{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:32px}
+.reports-panel table{width:100%;border-collapse:collapse;font-size:12px}
+.reports-panel th{padding:10px 16px;background:#f0f4fb;color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border)}
+.reports-panel td{padding:10px 16px;border-bottom:1px solid #f0f4fb;color:var(--text)}
+.reports-panel tr:last-child td{border-bottom:none}
+.reports-panel .rn{font-weight:700}
+.reports-panel .rv{font-weight:800;color:var(--navy)}
+[data-theme='dark'] .reports-panel th{background:#1e293b}
+@media (max-width:900px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 <script>
 (function(){
@@ -51,6 +69,31 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 </head>
 <body>
 <div class="page">
+  <div class="section-title">Overview</div>
+  <div class="stats-grid">
+    <div class="stat-tile"><div class="tv" id="st-contacts"><span class="spin"></span></div><div class="tl">Total Contacts</div></div>
+    <div class="stat-tile"><div class="tv" id="st-pool"><span class="spin"></span></div><div class="tl">In Automation Pool</div></div>
+    <div class="stat-tile"><div class="tv" id="st-sent-total"><span class="spin"></span></div><div class="tl">Emails Sent (All Time)</div></div>
+    <div class="stat-tile"><div class="tv" id="st-sent-today"><span class="spin"></span></div><div class="tl">Sent Today</div></div>
+    <div class="stat-tile"><div class="tv" id="st-opened"><span class="spin"></span></div><div class="tl">Opened</div><div class="td flat" id="st-open-rate"></div></div>
+    <div class="stat-tile"><div class="tv" id="st-clicked"><span class="spin"></span></div><div class="tl">Clicked</div><div class="td flat" id="st-click-rate"></div></div>
+    <div class="stat-tile"><div class="tv" id="st-failed"><span class="spin"></span></div><div class="tl">Failed Sends</div></div>
+    <div class="stat-tile"><div class="tv" id="st-unsub"><span class="spin"></span></div><div class="tl">Unsubscribed</div></div>
+  </div>
+
+  <div class="section-title">Reports</div>
+  <div class="reports-panel">
+    <table>
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody id="reports-body">
+        <tr><td class="rn">Automation engine</td><td class="rv" id="rp-engine">…</td></tr>
+        <tr><td class="rn">Pool — active</td><td class="rv" id="rp-pool-active">…</td></tr>
+        <tr><td class="rn">Pool — completed</td><td class="rv" id="rp-pool-done">…</td></tr>
+        <tr><td class="rn">Last automation run</td><td class="rv" id="rp-last-run">…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
   <div class="brand-section">
     <div class="brand-header">
       <img class="brand-logo" src="https://terratern.com/images/favicon_192.png" alt="TerraTern"/>
@@ -94,12 +137,59 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 const SB='https://oagsgovnxgiszofgytre.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI';
 const H={apikey:KEY,Authorization:`Bearer ${KEY}`,Prefer:'count=exact'};
+const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+async function countOf(path){
+  try{
+    const r=await fetch(`${SB}/rest/v1/${path}`,{headers:{...H,'Range':'0-0'}});
+    return Number(r.headers.get('content-range')?.split('/')?.[1]||0);
+  }catch{return null;}
+}
+function fmt(n){return n===null?'—':n.toLocaleString();}
+function pct(n,d){return d?((n/d)*100).toFixed(1)+'%':'—';}
+
 async function loadStats(){
-  const today=new Date(Date.now()+330*60000).toISOString().split('T')[0];
-  const set=(id,v)=>document.getElementById(id).textContent=v;
-  try{const r=await fetch(`${SB}/rest/v1/email_contacts?select=id`,{headers:H});set('em-contacts',Number(r.headers.get('content-range')?.split('/')?.[1]||0).toLocaleString());}catch{set('em-contacts','—');}
-  try{const r=await fetch(`${SB}/rest/v1/email_sends?status=eq.sent&select=id`,{headers:H});set('em-sent',Number(r.headers.get('content-range')?.split('/')?.[1]||0).toLocaleString());}catch{set('em-sent','—');}
-  try{const r=await fetch(`${SB}/rest/v1/email_sends?opened_at=not.is.null&select=id`,{headers:H});set('em-opened',Number(r.headers.get('content-range')?.split('/')?.[1]||0).toLocaleString());}catch{set('em-opened','—');}
+  const todayIST=new Date(Date.now()+330*60000).toISOString().split('T')[0];
+  const todayStartUTC=new Date(todayIST+'T00:00:00+05:30').toISOString();
+
+  const [contacts, poolTotal, poolActive, poolDone, sentTotal, sentToday, opened, clicked, failed, unsub] = await Promise.all([
+    countOf('email_contacts?select=id'),
+    countOf('email_automation_pool?select=id'),
+    countOf('email_automation_pool?select=id&status=eq.active'),
+    countOf('email_automation_pool?select=id&status=eq.completed'),
+    countOf('email_sends?select=id&status=eq.sent'),
+    countOf(`email_sends?select=id&status=eq.sent&sent_at=gte.${encodeURIComponent(todayStartUTC)}`),
+    countOf('email_sends?select=id&opened_at=not.is.null'),
+    countOf('email_sends?select=id&clicked_at=not.is.null'),
+    countOf('email_sends?select=id&status=eq.failed'),
+    countOf('email_unsubscribes?select=email'),
+  ]);
+
+  set('st-contacts', fmt(contacts));
+  set('st-pool', fmt(poolTotal));
+  set('st-sent-total', fmt(sentTotal));
+  set('st-sent-today', fmt(sentToday));
+  set('st-opened', fmt(opened));
+  set('st-clicked', fmt(clicked));
+  set('st-failed', fmt(failed));
+  set('st-unsub', fmt(unsub));
+  set('st-open-rate', sentTotal ? `${pct(opened,sentTotal)} open rate` : '');
+  set('st-click-rate', sentTotal ? `${pct(clicked,sentTotal)} click rate` : '');
+
+  set('rp-pool-active', fmt(poolActive));
+  set('rp-pool-done', fmt(poolDone));
+
+  set('em-contacts', fmt(contacts));
+  set('em-sent', fmt(sentTotal));
+  set('em-opened', fmt(opened));
+
+  try{
+    const r=await fetch(`${SB}/rest/v1/email_automation_state?select=status,last_run_at&id=eq.default`,{headers:H});
+    const d=await r.json();
+    const s=d && d[0];
+    set('rp-engine', s ? (s.status==='running' ? '🟢 Running' : '🔴 Stopped') : '—');
+    set('rp-last-run', s && s.last_run_at ? new Date(s.last_run_at).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}) : '—');
+  }catch{ set('rp-engine','—'); set('rp-last-run','—'); }
+
   try{
     const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),8000);
     const r=await fetch('/api/email/health',{signal:ctrl.signal});const d=await r.json();
