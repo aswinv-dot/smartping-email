@@ -32,7 +32,7 @@
     },
     {
       id: 'capi',
-      name: 'CAPI x Meta Ads',
+      name: 'Meta Ads x CAPI',
       links: [
         { label: 'Dashboard', href: '/capi-dashboard.html', icon: '📊' },
       ],
