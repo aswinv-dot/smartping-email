@@ -83,7 +83,10 @@ body{font-family:'Inter',sans-serif}
             <div class="cms-title">Alumni Webinar CMS</div>
             <div class="cms-sub">Edit speaker, webinar details and CTA for each alumni webinar page</div>
           </div>
-          <button class="copy-link-btn" id="copy-link-btn" onclick="copyPageUrl()">🔗 Copy Link</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="copy-link-btn" href="https://docs.google.com/spreadsheets/d/1i3aEXBgyF8CRSNKwcbUggDGl_mUWU4qyrLZDf6i2Ci4/edit?gid=0#gid=0" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">📋 Leads Sheet</a>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyPageUrl()">🔗 Copy Link</button>
+          </div>
         </div>
 
         <div class="program-tabs">
@@ -92,7 +95,7 @@ body{font-family:'Inter',sans-serif}
         </div>
 
         <div class="leads-note">
-          Registrations submit to a Google Apps Script endpoint (set below), which is expected to write into a Google Sheet on the connected Google account. This CMS has no direct visibility into that Sheet — open the Apps Script project bound to the <code>googleScriptURL</code> below in Google Drive/Apps Script to find its linked spreadsheet.
+          Registrations for both webinars land in <a href="https://docs.google.com/spreadsheets/d/1i3aEXBgyF8CRSNKwcbUggDGl_mUWU4qyrLZDf6i2Ci4/edit?gid=0#gid=0" target="_blank" rel="noopener">this Google Sheet</a>, via the Google Apps Script URL set below.
         </div>
 
         <div class="section-card">
