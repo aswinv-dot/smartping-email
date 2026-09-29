@@ -918,9 +918,14 @@
   }
 
   function setConnected(ok) {
+    // Old page header (with the connection badge) was removed when this
+    // page was folded into the shared shell — these elements no longer
+    // exist, so guard against that instead of throwing and stopping the
+    // rest of the load flow.
     const badge = document.getElementById("connBadge");
     const text  = document.getElementById("connText");
     const dot   = document.getElementById("statusDot");
+    if (!badge || !text || !dot) return;
     badge.className = "status-badge " + (ok ? "connected" : "disconnected");
     text.textContent = ok ? "Connected" : "Table not found";
     dot.style.background = ok ? "var(--green)" : "var(--red)";

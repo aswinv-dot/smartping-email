@@ -32,7 +32,7 @@
     },
     {
       id: 'capi',
-      name: 'CAPI x SmartPing',
+      name: 'CAPI x Meta Ads',
       links: [
         { label: 'Dashboard', href: '/capi-dashboard.html', icon: '📊' },
       ],
