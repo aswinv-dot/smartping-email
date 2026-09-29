@@ -30,6 +30,13 @@
         { label: 'Send Test', href: '/wa-sendtest.html', icon: '🧪' },
       ],
     },
+    {
+      id: 'capi',
+      name: 'CAPI x SmartPing',
+      links: [
+        { label: 'Dashboard', href: '/capi-dashboard.html', icon: '📊' },
+      ],
+    },
   ];
 
   function getPref(key, fallback) {

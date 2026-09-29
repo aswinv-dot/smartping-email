@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TerraTern CAPI Dashboard</title>
+<link rel="icon" href="https://terratern.com/images/favicon.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #eaf2fc;
+    --surface: #ffffff;
+    --surface-deep: #dfeaf9;
+    --border: #d6e3f5;
+    --border-light: #c2d6ee;
+    --text: #0a0a0a;
+    --text-muted: #5b6b80;
+    --text-dim: #8da3bc;
+    --accent: #255cc1;
+    --accent-glow: rgba(37,92,193,0.10);
+    --navy: #00215c;
+    --navy-bg: rgba(0,33,92,0.08);
+    --sky: #2f7fd4;
+    --sky-bg: rgba(154,203,253,0.30);
+    --gold: #b8930a;
+    --gold-bg: rgba(241,200,25,0.18);
+    --green: #16a34a;
+    --green-bg: rgba(22,163,74,0.10);
+    --red: #dc2626;
+    --red-bg: rgba(220,38,38,0.08);
+    --mono: 'JetBrains Mono', monospace;
+    --shadow: 0 1px 3px rgba(0,33,92,0.08), 0 1px 2px rgba(0,33,92,0.05);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── Header ── */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-img {
+    height: 26px;
+    width: auto;
+  }
+
+  .logo-dot {
+    width: 6px; height: 6px;
+    background: var(--gold);
+    border-radius: 50%;
+    box-shadow: 0 0 6px var(--gold);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+
+  .logo-text {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--mono);
+  }
+
+  .status-badge.connected {
+    background: var(--green-bg);
+    color: var(--green);
+    border: 1px solid rgba(22,163,74,0.25);
+  }
+
+  .status-badge.disconnected {
+    background: var(--red-bg);
+    color: var(--red);
+    border: 1px solid rgba(220,38,38,0.25);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ── Layout ── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* ── Stats Row ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .stat-value {
+    font-size: 26px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--navy);
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* ── Filters ── */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .filter-btn.active, .filter-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-glow);
+  }
+
+  .filter-input, .filter-select {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--mono);
+    outline: none;
+  }
+
+  .filter-input { width: 200px; }
+  .filter-select { cursor: pointer; }
+
+  .filter-input:focus, .filter-select:focus { border-color: var(--accent); }
+  .filter-input::placeholder { color: var(--text-dim); }
+
+  .refresh-btn {
+    margin-left: auto;
+    padding: 5px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* ── Table ── */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  thead tr {
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-deep);
+  }
+
+  th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 11px 16px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface); }
+
+  .mono { font-family: var(--mono); font-size: 12px; }
+
+  /* ── Event Badges ── */
+  .event-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: var(--mono);
+    white-space: nowrap;
+  }
+
+  .badge-WebinarBooked    { background: var(--navy-bg);  color: var(--navy);  border: 1px solid rgba(0,33,92,0.2); }
+  .badge-WebinarAttended  { background: var(--sky-bg);   color: var(--sky);   border: 1px solid rgba(47,127,212,0.3); }
+  .badge-PaymentScheduled { background: var(--green-bg); color: var(--green); border: 1px solid rgba(22,163,74,0.25); }
+  .badge-Purchase         { background: var(--gold-bg);  color: var(--gold);  border: 1px solid rgba(184,147,10,0.35); font-weight: 700; }
+
+  /* ── Empty / Loading ── */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-icon { font-size: 32px; margin-bottom: 12px; }
+  .empty-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; }
+
+  .loading-row td {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-muted);
+  }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .page-info { font-size: 12px; color: var(--text-muted); font-family: var(--mono); }
+
+  .page-btns { display: flex; gap: 6px; }
+
+  .page-btn {
+    padding: 4px 12px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; cursor: default; }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    padding: 10px 18px;
+    background: var(--green);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    transform: translateY(60px);
+    opacity: 0;
+    transition: all 0.25s;
+    z-index: 999;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .container { padding: 16px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5) { display: none; }
+    .filter-input { width: 140px; }
+    .header { padding: 0 16px; }
+  }
+
+  /* ── Date Picker ── */
+  .date-picker-wrap { position: relative; }
+
+  .date-picker-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: var(--mono);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    min-width: 130px;
+    justify-content: space-between;
+  }
+
+  .date-picker-btn:hover, .date-picker-btn.open {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .dp-arrow { font-size: 10px; opacity: 0.6; }
+
+  .date-picker-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,33,92,0.12);
+    z-index: 200;
+    min-width: 180px;
+    overflow: hidden;
+  }
+
+  .dp-presets {
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    gap: 2px;
+  }
+
+  .dp-preset {
+    padding: 7px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 6px;
+    transition: all 0.1s;
+    font-weight: 500;
+  }
+
+  .dp-preset:hover { background: var(--bg); color: var(--text); }
+  .dp-preset.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+
+
+
+
+
+
+  .cal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(0,0,0,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,33,92,0.18);
+    display: flex;
+    overflow: hidden;
+    min-width: 660px;
+    max-width: 95vw;
+    font-family: "Inter", sans-serif;
+  }
+
+  .cal-presets {
+    width: 160px;
+    border-right: 1px solid var(--border);
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--surface);
+  }
+
+  .cal-preset-btn {
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: "Inter", sans-serif;
+    cursor: pointer;
+    text-align: left;
+    border-radius: 6px;
+    transition: all 0.1s;
+    font-weight: 500;
+  }
+
+  .cal-preset-btn:hover { background: var(--bg); color: var(--text); }
+  .cal-preset-btn.active { background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+
+  .cal-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  .cal-months {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+
+  .cal-month {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .cal-month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .cal-month-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .cal-nav {
+    width: 26px;
+    height: 26px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.1s;
+  }
+
+  .cal-nav:hover { border-color: var(--accent); color: var(--accent); }
+  .cal-nav.invisible { visibility: hidden; }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .cal-dow {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .cal-day {
+    font-size: 12px;
+    text-align: center;
+    padding: 6px 4px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.1s;
+    font-weight: 500;
+    border: 1px solid transparent;
+  }
+
+  .cal-day:hover:not(.cal-empty):not(.cal-disabled) {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .cal-day.cal-empty { cursor: default; }
+  .cal-day.cal-disabled { color: var(--text-dim); cursor: default; }
+
+  .cal-day.cal-selected-start,
+  .cal-day.cal-selected-end {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 700;
+    border-color: var(--accent);
+  }
+
+  .cal-day.cal-in-range {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border-radius: 0;
+  }
+
+  .cal-day.cal-today {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .cal-day.cal-today.cal-selected-start,
+  .cal-day.cal-today.cal-selected-end {
+    color: #fff;
+  }
+
+  .cal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    margin-top: 4px;
+  }
+
+  .cal-range-label {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .cal-btns { display: flex; gap: 8px; }
+
+  .cal-btn {
+    padding: 6px 18px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    transition: all 0.15s;
+  }
+
+  .cal-btn-cancel {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+  }
+
+  .cal-btn-cancel:hover { border-color: var(--red); color: var(--red); }
+
+  .cal-btn-apply {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .cal-btn-apply:hover { background: var(--navy); }
+  .cal-btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  @media (max-width: 680px) {
+    .cal-box { flex-direction: column; min-width: unset; width: 95vw; }
+    .cal-presets { width: 100%; flex-direction: row; flex-wrap: wrap; border-right: none; border-bottom: 1px solid var(--border); }
+    .cal-months { flex-direction: column; gap: 16px; }
+  }
+
+
+  /* ── Custom Range Picker ── */
+  .custom-picker-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    background: rgba(0,33,92,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .custom-picker-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,33,92,0.18);
+    padding: 28px;
+    width: 380px;
+    max-width: 95vw;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .custom-picker-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 20px;
+  }
+
+  .custom-picker-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .custom-picker-field {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .custom-picker-field label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 36px;
+    flex-shrink: 0;
+  }
+
+  .custom-picker-field input[type="date"] {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    font-family: var(--mono);
+    outline: none;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .custom-picker-field input[type="date"]:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .custom-picker-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  .cp-btn {
+    padding: 7px 20px;
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .cp-btn-cancel {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+  }
+
+  .cp-btn-cancel:hover { border-color: var(--red); color: var(--red); }
+
+  .cp-btn-apply {
+    border: none;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .cp-btn-apply:hover { background: var(--navy); }
+  .cp-btn-apply:disabled { opacity: 0.4; cursor: not-allowed; }
+
+</style>
+<link rel="stylesheet" href="/shell.css"/>
+<script src="/shell.js" defer></script>
+</head>
+<body>
+
+
+
+<div class="container">
+
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="stat-label">Total Sent</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub">in selected month</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Webinar Booked</div>
+      <div class="stat-value" id="statBooked">—</div>
+      <div class="stat-sub">booked signals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Webinars</div>
+      <div class="stat-value" id="statWebinar">—</div>
+      <div class="stat-sub">attended signals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Payment Scheduled</div>
+      <div class="stat-value" id="statPayment">—</div>
+      <div class="stat-sub">scheduled signals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Purchases</div>
+      <div class="stat-value" id="statPurchase">—</div>
+      <div class="stat-sub">purchase signals</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Today</div>
+      <div class="stat-value" id="statToday">—</div>
+      <div class="stat-sub">events fired</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Last Run</div>
+      <div class="stat-value" style="font-size:14px;" id="statLastRun">—</div>
+      <div class="stat-sub">IST</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterEvent('all', this)">All</button>
+    <button class="filter-btn" onclick="filterEvent('WebinarBooked', this)">Webinar Booked</button>
+    <button class="filter-btn" onclick="filterEvent('WebinarAttended', this)">Webinar Attended</button>
+    <button class="filter-btn" onclick="filterEvent('PaymentScheduled', this)">Payment Scheduled</button>
+    <button class="filter-btn" onclick="filterEvent('Purchase', this)">Purchase</button>
+    <div class="date-picker-wrap" id="datePickerWrap">
+      <button class="date-picker-btn" id="datePickerBtn" onclick="toggleDatePicker(event)">
+        <span id="datePickerLabel">All time</span>
+        <span class="dp-arrow">▾</span>
+      </button>
+      <div class="date-picker-dropdown" id="datePickerDropdown" style="display:none;">
+        <div class="dp-presets">
+          <button class="dp-preset active" onclick="setPreset('all',this)">All time</button>
+          <button class="dp-preset" onclick="setPreset('today',this)">Today</button>
+          <button class="dp-preset" onclick="setPreset('yesterday',this)">Yesterday</button>
+          <button class="dp-preset" onclick="setPreset('7d',this)">Last 7 Days</button>
+          <button class="dp-preset" onclick="setPreset('30d',this)">Last 30 Days</button>
+          <button class="dp-preset" onclick="setPreset('thisMonth',this)">This Month</button>
+          <button class="dp-preset" onclick="setPreset('lastMonth',this)">Last Month</button>
+          <button class="dp-preset" onclick="setPreset('custom',this)">Custom Range</button>
+        </div>
+
+      </div>
+    </div>
+    <input class="filter-input" id="searchInput" placeholder="Search lead ID..." oninput="applyFilters()">
+    <button class="refresh-btn" onclick="loadLogs()">↻ Refresh</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Lead ID</th>
+          <th>Event</th>
+          <th>Status ID</th>
+          <th>Phone Hash</th>
+          <th>Sent At (IST)</th>
+          <th>Meta Response</th>
+        </tr>
+      </thead>
+      <tbody id="logsBody">
+        <tr class="loading-row"><td colspan="7">Loading events...</td></tr>
+      </tbody>
+    </table>
+    <div class="pagination" id="pagination" style="display:none;">
+      <div class="page-info" id="pageInfo"></div>
+      <div class="page-btns">
+        <button class="page-btn" id="prevBtn" onclick="changePage(-1)">← Prev</button>
+        <button class="page-btn" id="nextBtn" onclick="changePage(1)">Next →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SUPABASE_URL  = "https://otzmitwvvetdzheogtkr.supabase.co";
+  const SUPABASE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im90em1pdHd2dmV0ZHpoZW9ndGtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjAzNTUsImV4cCI6MjA5NjgzNjM1NX0.YQwCTN7cxq0Zo0e66_Kl2yAmN0okWyqpTq-ktgexlig";
+  const PAGE_SIZE     = 50;
+
+  let allLogs      = [];   // kept for fallback stats only
+  let filteredTotal = 0;  // true DB count for current filters
+  let currentPage  = 1;
+  let activeFilter = "all";
+
+  // CounsellingDone is merged into WebinarAttended for display only.
+  // Underlying Supabase rows keep their original event_name untouched.
+  function displayEventName(name) {
+    return name === "CounsellingDone" ? "WebinarAttended" : name;
+  }
+
+  // ── Supabase fetch ──
+  async function fetchFromSupabase(query) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json"
+      }
+    });
+    if (!res.ok) throw new Error(`Supabase error: ${res.status}`);
+    return res.json();
+  }
+
+  // True count via Prefer: count=exact (bypasses 1000-row cap)
+  async function countFromSupabase(filter = "") {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/capi_events_log?select=id${filter}`, {
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${SUPABASE_KEY}`,
+        "Content-Type": "application/json",
+        "Prefer": "count=exact",
+        "Range": "0-0"
+      }
+    });
+    if (!res.ok) throw new Error(`Supabase count error: ${res.status}`);
+    const range = res.headers.get("Content-Range") || "";
+    const match = range.match(/\/(\d+)$/);
+    return match ? parseInt(match[1], 10) : null;
+  }
+
+  // ── Connection check ──
+  async function checkConnection() {
+    try {
+      await fetchFromSupabase("capi_events_log?limit=1&select=id");
+      setConnected(true);
+    } catch {
+      setConnected(false);
+    }
+  }
+
+  function setConnected(ok) {
+    const badge = document.getElementById("connBadge");
+    const text  = document.getElementById("connText");
+    const dot   = document.getElementById("statusDot");
+    badge.className = "status-badge " + (ok ? "connected" : "disconnected");
+    text.textContent = ok ? "Connected" : "Table not found";
+    dot.style.background = ok ? "var(--green)" : "var(--red)";
+    dot.style.boxShadow  = ok ? "0 0 6px var(--green)" : "0 0 6px var(--red)";
+  }
+
+  // Load logs
+  let trueTotal = null;   // actual DB count, unrestricted by 1000-row cap
+
+  async function loadLogs() {
+    try {
+      trueTotal = await countFromSupabase();
+      setConnected(true);
+    } catch (e) {
+      setConnected(false);
+    }
+    currentPage = 1;
+    await fetchPage();
+    await updateStats([]);
+  }
+
+  // ── Date Range Picker state ──
+  let dateRange = { preset: "all", from: null, to: null };
+
+  function toIST(dateStr, endOfDay = false) {
+    // dateStr = "YYYY-MM-DD", returns ISO string with IST offset
+    return dateStr + (endOfDay ? "T23:59:59+05:30" : "T00:00:00+05:30");
+  }
+
+  function setPreset(preset, btn) {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const fmt = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+    document.querySelectorAll(".dp-preset").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    let from = null, to = null, label = "All time";
+
+    if (preset === "today") {
+      from = to = fmt(now); label = "Today";
+    } else if (preset === "yesterday") {
+      const y = new Date(now); y.setDate(y.getDate() - 1);
+      from = to = fmt(y); label = "Yesterday";
+    } else if (preset === "7d") {
+      const s = new Date(now); s.setDate(s.getDate() - 6);
+      from = fmt(s); to = fmt(now); label = "Last 7 Days";
+    } else if (preset === "30d") {
+      const s = new Date(now); s.setDate(s.getDate() - 29);
+      from = fmt(s); to = fmt(now); label = "Last 30 Days";
+    } else if (preset === "thisMonth") {
+      from = fmt(new Date(now.getFullYear(), now.getMonth(), 1));
+      to = fmt(now);
+      label = now.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+    } else if (preset === "lastMonth") {
+      const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lme = new Date(now.getFullYear(), now.getMonth(), 0);
+      from = fmt(lm); to = fmt(lme);
+      label = lm.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
+    } else if (preset === "custom") {
+      openCustomPicker();
+      return;
+    }
+
+    dateRange = { preset, from, to };
+    document.getElementById("datePickerLabel").textContent = label;
+    closeDatePicker();
+    if (typeof applyFilters === "function") applyFilters();
+    else if (typeof loadAll === "function") loadAll();
+  }
+
+  function buildCustomLabel() {
+    const { from, to } = dateRange;
+    if (!from && !to) return "Custom Range";
+    if (from && to && from === to) return from;
+    if (from && to) return `${from} → ${to}`;
+    if (from) return `From ${from}`;
+    return `Until ${to}`;
+  }
+
+
+  function toggleDatePicker(e) {
+    e.stopPropagation();
+    const dd  = document.getElementById("datePickerDropdown");
+    const btn = document.getElementById("datePickerBtn");
+    const open = dd.style.display !== "none";
+    dd.style.display = open ? "none" : "block";
+    btn.classList.toggle("open", !open);
+  }
+
+  function closeDatePicker() {
+    document.getElementById("datePickerDropdown").style.display = "none";
+    document.getElementById("datePickerBtn").classList.remove("open");
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!document.getElementById("datePickerWrap").contains(e.target)) closeDatePicker();
+  });
+
+  // Build Supabase filter string from current dateRange
+  function monthFilter() {
+    const { from, to } = dateRange;
+    if (!from && !to) return "";
+    let filter = "";
+    if (from) filter += `&sent_at=gte.${encodeURIComponent(toIST(from))}`;
+    if (to)   filter += `&sent_at=lte.${encodeURIComponent(toIST(to, true))}`;
+    return filter;
+  }
+
+  async function updateStats(data) {
+    const today = new Date().toISOString().slice(0, 10);
+    const mf    = monthFilter();
+
+    // Fire all 5 event-type counts + total in parallel — all bypass the 1000-row cap
+    try {
+      const [total, booked, attended, counselling, payment, purchase, todayCount] = await Promise.all([
+        mf === "" ? Promise.resolve(trueTotal) : countFromSupabase(mf),
+        countFromSupabase(`&event_name=eq.WebinarBooked${mf}`),
+        countFromSupabase(`&event_name=eq.WebinarAttended${mf}`),
+        countFromSupabase(`&event_name=eq.CounsellingDone${mf}`),
+        countFromSupabase(`&event_name=eq.PaymentScheduled${mf}`),
+        countFromSupabase(`&event_name=eq.Purchase${mf}`),
+        countFromSupabase(`&sent_at=gte.${encodeURIComponent(today + "T00:00:00+05:30")}`)
+      ]);
+
+      document.getElementById("statTotal").textContent   = total    ?? "—";
+      document.getElementById("statBooked").textContent  = booked   ?? "—";
+      // WebinarAttended + CounsellingDone merged
+      document.getElementById("statWebinar").textContent = ((attended ?? 0) + (counselling ?? 0)) || "—";
+      document.getElementById("statPayment").textContent = payment  ?? "—";
+      document.getElementById("statPurchase").textContent= purchase ?? "—";
+      document.getElementById("statToday").textContent   = todayCount ?? data.filter(r => r.sent_at?.startsWith(today)).length;
+    } catch {
+      // Fallback to in-memory counts from capped 1000-row fetch
+      document.getElementById("statTotal").textContent   = trueTotal ?? data.length;
+      document.getElementById("statBooked").textContent  = data.filter(r => r.event_name === "WebinarBooked").length;
+      document.getElementById("statWebinar").textContent = data.filter(r => displayEventName(r.event_name) === "WebinarAttended").length;
+      document.getElementById("statPayment").textContent = data.filter(r => r.event_name === "PaymentScheduled").length;
+      document.getElementById("statPurchase").textContent= data.filter(r => r.event_name === "Purchase").length;
+      document.getElementById("statToday").textContent   = data.filter(r => r.sent_at?.startsWith(today)).length;
+    }
+
+    // Last Run — from the latest row in the 1000-row fetch (always recent enough)
+    if (data.length > 0) {
+      const last = new Date(data[0].sent_at);
+      document.getElementById("statLastRun").textContent = last.toLocaleTimeString("en-IN", {
+        timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit"
+      });
+    } else {
+      document.getElementById("statLastRun").textContent = "—";
+    }
+  }
+
+  // ── Filters ──
+  function filterEvent(type, btn) {
+    activeFilter = type;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentPage = 1;
+    applyFilters(); // async, fire and forget
+  }
+
+  // Build event filter for Supabase query
+  function buildEventFilter() {
+    let f = "";
+    const mf = monthFilter();
+    const search = document.getElementById("searchInput").value.trim();
+    // event type
+    if (activeFilter !== "all") {
+      if (activeFilter === "WebinarAttended") {
+        // include CounsellingDone rows too
+        f += `&or=(event_name.eq.WebinarAttended,event_name.eq.CounsellingDone)`;
+      } else {
+        f += `&event_name=eq.${activeFilter}`;
+      }
+    }
+    // date range
+    if (mf) f += mf;
+    // search — Supabase ilike
+    if (search) f += `&lead_id=ilike.*${encodeURIComponent(search)}*`;
+    return f;
+  }
+
+  async function fetchPage() {
+    document.getElementById("logsBody").innerHTML =
+      `<tr class="loading-row"><td colspan="7">Loading...</td></tr>`;
+    const offset = (currentPage - 1) * PAGE_SIZE;
+    const ef = buildEventFilter();
+    try {
+      const [rows, pageTotal] = await Promise.all([
+        fetchFromSupabase(`capi_events_log?select=*&order=sent_at.desc&limit=${PAGE_SIZE}&offset=${offset}${ef}`),
+        countFromSupabase(ef)
+      ]);
+      filteredTotal = pageTotal ?? 0;
+      renderPage(rows, offset);
+    } catch (e) {
+      document.getElementById("logsBody").innerHTML =
+        `<tr class="loading-row"><td colspan="7" style="color:var(--red)">&#9888; Could not load logs.</td></tr>`;
+    }
+  }
+
+  async function applyFilters() {
+    currentPage = 1;
+    await fetchPage();
+    await updateStats([]);
+  }
+
+  // ── Render ──
+  function renderPage(rows, offset) {
+    const tbody = document.getElementById("logsBody");
+
+    if (!rows || rows.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="7">
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No events found</div>
+            <div class="empty-sub">Try adjusting your filters or date range</div>
+          </div>
+        </td></tr>`;
+      document.getElementById("pagination").style.display = "none";
+      return;
+    }
+
+    tbody.innerHTML = rows.map((r, i) => {
+      const idx = offset + i + 1;
+      const displayName = displayEventName(r.event_name);
+      const sentIST = new Date(r.sent_at).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit", month: "short",
+        hour: "2-digit", minute: "2-digit"
+      });
+      const hash = r.phone_hash ? r.phone_hash.slice(0, 12) + "…" : "—";
+      const meta = r.meta_response ? "✓" : "—";
+      return `
+        <tr>
+          <td class="mono" style="color:var(--text-muted)">${idx}</td>
+          <td class="mono">${r.lead_id}</td>
+          <td><span class="event-badge badge-${displayName}">${displayName}</span></td>
+          <td class="mono" style="color:var(--text-muted)">${r.status_id}</td>
+          <td class="mono" style="color:var(--text-dim);font-size:11px">${hash}</td>
+          <td class="mono" style="font-size:12px">${sentIST}</td>
+          <td style="color:var(--green);font-size:12px">${meta}</td>
+        </tr>`;
+    }).join("");
+
+    const pages = Math.ceil(filteredTotal / PAGE_SIZE);
+    const start = offset + 1;
+    const end   = Math.min(offset + PAGE_SIZE, filteredTotal);
+    const pagination = document.getElementById("pagination");
+    pagination.style.display = "flex";
+    document.getElementById("pageInfo").textContent =
+      `${start}–${end} of ${filteredTotal.toLocaleString()} events`;
+    document.getElementById("prevBtn").disabled = currentPage <= 1;
+    document.getElementById("nextBtn").disabled = currentPage >= pages;
+  }
+
+  async function changePage(dir) {
+    currentPage += dir;
+    await fetchPage();
+    window.scrollTo(0, 0);
+  }
+
+  // ── Toast ──
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 2500);
+  }
+
+  // ── Init ──
+  checkConnection();
+  loadLogs();
+  setInterval(loadLogs, 5 * 60 * 1000); // auto-refresh every 5 min
+
+
+
+
+
+  // ── Custom Range Picker ──
+  let _cpCallback = null;
+
+  function openCustomPicker() {
+    closeDatePicker();
+    // Pre-fill with existing custom range if any
+    const f = document.getElementById("cpFrom");
+    const t = document.getElementById("cpTo");
+    if (dateRange && dateRange.preset === "custom") {
+      f.value = dateRange.from || "";
+      t.value = dateRange.to   || "";
+    } else {
+      f.value = ""; t.value = "";
+    }
+    cpValidate();
+    document.getElementById("cpOverlay").style.display = "flex";
+  }
+
+  function cpClose() {
+    document.getElementById("cpOverlay").style.display = "none";
+  }
+
+  function cpOverlayClick(e) {
+    if (e.target === document.getElementById("cpOverlay")) cpClose();
+  }
+
+  function cpValidate() {
+    const f = document.getElementById("cpFrom").value;
+    const t = document.getElementById("cpTo").value;
+    document.getElementById("cpApply").disabled = !(f && t && f <= t);
+  }
+
+  function cpApply() {
+    const from  = document.getElementById("cpFrom").value;
+    const to    = document.getElementById("cpTo").value;
+    if (!from || !to) return;
+    cpClose();
+    const label = from === to ? from : `${from} → ${to}`;
+    dateRange = { preset: "custom", from, to };
+    document.getElementById("datePickerLabel").textContent = label;
+    // mark Custom Range as active in dropdown
+    document.querySelectorAll(".dp-preset").forEach(b => {
+      b.classList.toggle("active", b.textContent.trim() === "Custom Range");
+    });
+    // trigger the right reload function
+    if (typeof applyFilters === "function") applyFilters();
+    else if (typeof loadAll === "function") loadAll();
+  }
+
+</script>
+
+
+
+<!-- Custom Range Picker -->
+<div class="custom-picker-overlay" id="cpOverlay" style="display:none;" onclick="cpOverlayClick(event)">
+  <div class="custom-picker-box" onclick="event.stopPropagation()">
+    <div class="custom-picker-title">Select Date Range</div>
+    <div class="custom-picker-fields">
+      <div class="custom-picker-field">
+        <label>From</label>
+        <input type="date" id="cpFrom" oninput="cpValidate()">
+      </div>
+      <div class="custom-picker-field">
+        <label>To</label>
+        <input type="date" id="cpTo" oninput="cpValidate()">
+      </div>
+    </div>
+    <div class="custom-picker-footer">
+      <button class="cp-btn cp-btn-cancel" onclick="cpClose()">Cancel</button>
+      <button class="cp-btn cp-btn-apply" id="cpApply" onclick="cpApply()" disabled>Apply</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
