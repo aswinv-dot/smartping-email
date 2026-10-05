@@ -137,7 +137,7 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Emails Sent</th><th>Status</th><th>Last sent</th><th></th></tr></thead>
+        <thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Emails Sent</th><th>Status</th><th>Last sent</th><th></th></tr></thead>
         <tbody id="pool-tbody"></tbody>
       </table>
     </div>
@@ -280,11 +280,12 @@ async function loadPool(){
       <tr>
         <td>${esc(p.email)}</td>
         <td>${esc(p.fullname||'—')}</td>
+        <td>${p.added_at ? new Date(p.added_at).toLocaleDateString('en-IN') : '—'}</td>
         <td>${p.current_step}</td>
         <td>${esc(p.status)}</td>
         <td>${p.last_sent_at ? new Date(p.last_sent_at).toLocaleDateString('en-IN') : '—'}</td>
         <td><button class="btn-danger" style="padding:3px 8px" onclick="removeFromPool('${esc(p.email)}')">Remove</button></td>
-      </tr>`).join('') : '<tr><td colspan="6"><div class="empty-box">Pool is empty.</div></td></tr>';
+      </tr>`).join('') : '<tr><td colspan="7"><div class="empty-box">Pool is empty.</div></td></tr>';
   }catch(e){}
 }
 async function removeFromPool(email){
