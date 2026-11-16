@@ -25,6 +25,13 @@ function resolveTokens(html, contact) {
 // or a manual Run Now).
 const MAX_PER_TICK = 300;
 
+// Step delays are counted in IST calendar days, not exact 24h gaps. Sends in
+// one tick are stamped seconds-to-minutes apart, so an exact "last_sent_at +
+// 24h" check made most contacts miss the next day's tick and slip a full day
+// (every step took 2 days). Comparing IST dates keeps "1 day" = next day's tick.
+const IST_OFFSET_MS = 330 * 60000;
+const istDayNumber = (ms) => Math.floor((ms + IST_OFFSET_MS) / 86400000);
+
 // Pulls today's webinar-attended leads straight from Metabase and adds
 // any NEW ones (by email) to the pool. Existing pool rows — whatever
 // their status (active mid-sequence, completed, removed) — are left
@@ -122,9 +129,9 @@ export default async function handler(req, res) {
       if (contact.current_step === 0) { due.push({ contact, step }); continue; } // never sent — due immediately
 
       const prevStep = sequence.find(s => s.step_number === contact.current_step);
-      const delayMs = (prevStep?.delay_days || 1) * 86400000;
-      const dueAt = new Date(contact.last_sent_at).getTime() + delayMs;
-      if (now >= dueAt) due.push({ contact, step });
+      const delayDays = prevStep?.delay_days || 1;
+      const daysSince = istDayNumber(now) - istDayNumber(new Date(contact.last_sent_at).getTime());
+      if (daysSince >= delayDays) due.push({ contact, step });
     }
 
     await Promise.all([
