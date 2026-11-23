@@ -92,7 +92,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   <div class="smtp-modal-title">SMTP Connection</div>
   <div class="smtp-row"><span class="smtp-key">Host</span><span class="smtp-val">node21.urmailtechno.com</span></div>
   <div class="smtp-row"><span class="smtp-key">Port</span><span class="smtp-val">587</span></div>
-  <div class="smtp-row"><span class="smtp-key">Domain</span><span class="smtp-val">marketing.terratern.in</span></div>
+  <div class="smtp-row"><span class="smtp-key">Domain</span><span class="smtp-val">learn.terratern.in</span></div>
   <div class="smtp-row"><span class="smtp-key">User</span><span class="smtp-val">user_teratern</span></div>
   <div class="smtp-err" id="smtp-err" style="display:none"></div>
 </div>
@@ -160,7 +160,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         <div class="form-group">
           <label class="form-label">Email Domain</label>
           <select class="form-select" id="f-domain" onchange="updatePreview()">
-            <option value="marketing.terratern.in">marketing.terratern.in</option>
+            <option value="learn.terratern.in">learn.terratern.in</option>
           </select>
         </div>
         <div class="form-group">
@@ -198,7 +198,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
         </div>
         <div class="preview-frame desktop" id="preview-frame">
           <div class="preview-meta">
-            From: <span id="pv-from">TerraTern</span> &lt;<span id="pv-domain">marketing.terratern.in</span>&gt;
+            From: <span id="pv-from">TerraTern</span> &lt;<span id="pv-domain">learn.terratern.in</span>&gt;
             &nbsp;|&nbsp; Subject: <span id="pv-subject">—</span>
             &nbsp;|&nbsp; <span id="pv-preview" style="color:var(--muted)">Preview text...</span>
           </div>
@@ -237,7 +237,7 @@ function newDraft() {
   currentId = null;
   ['f-name','f-subject','f-preview-text'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f-from-name').value = 'TerraTern';
-  document.getElementById('f-domain').value = 'marketing.terratern.in';
+  document.getElementById('f-domain').value = 'learn.terratern.in';
   document.getElementById('editor-area').innerHTML = '';
   document.getElementById('delete-btn').style.display = 'none';
   document.getElementById('status-msg').textContent = '';
@@ -255,7 +255,7 @@ async function loadDraft(id) {
   document.getElementById('f-from-name').value = dr.from_name || 'TerraTern';
   document.getElementById('f-subject').value = dr.subject || '';
   document.getElementById('f-preview-text').value = dr.preview_text || '';
-  document.getElementById('f-domain').value = dr.domain || 'marketing.terratern.in';
+  document.getElementById('f-domain').value = dr.domain || 'learn.terratern.in';
   document.getElementById('editor-area').innerHTML = dr.body || '';
   document.getElementById('delete-btn').style.display = '';
   updatePreview();
