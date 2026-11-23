@@ -18,6 +18,19 @@ function resolveTokens(html, contact) {
     .replace(/\{\{mobile\}\}/g, contact.mobile || '');
 }
 
+// Supabase returns at most 1000 rows per request, so large tables must be
+// read in pages or rows past the 1000th are silently never seen.
+async function fetchAllRows(build) {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await build().order('id', { ascending: true }).range(from, from + 999);
+    if (error) return { data: null, error };
+    out.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  return { data: out, error: null };
+}
+
 // Hard ceiling per invocation, so a large pool can't try to push
 // thousands of sends through one synchronous serverless call and hit its
 // timeout. Purely a request-shape safety net. If more than this many are
@@ -48,7 +61,16 @@ async function syncPoolFromMetabase() {
 
   const attended = rows.filter(r => String(r.webinar_attended || '').trim().toLowerCase() === 'yes');
   const candidates = attended
-    .map(r => ({ email: String(r.email || '').toLowerCase().trim(), fullname: r.fullname || r.name || '', mobile: r.mobile || '' }))
+    .map(r => ({
+      email: String(r.email || '').toLowerCase().trim(),
+      fullname: r.fullname || r.name || '',
+      mobile: r.mobile || '',
+      // Disposition at the moment the lead enters the pool (saved once, never overwritten
+      // because existing pool rows are skipped on later syncs).
+      lead_id: r.lead_id != null ? String(r.lead_id) : null,
+      initial_status: r.lead_status || null,
+      initial_stage: r.lead_stage || null,
+    }))
     .filter(c => c.email);
 
   // Dedup within this batch (Metabase can repeat a lead across rows).
@@ -57,7 +79,7 @@ async function syncPoolFromMetabase() {
 
   let added = 0;
   if (unique.length) {
-    const { data: existing } = await sb.from('email_automation_pool').select('email');
+    const { data: existing } = await fetchAllRows(() => sb.from('email_automation_pool').select('id,email'));
     const existingSet = new Set((existing || []).map(e => e.email.toLowerCase()));
     const toInsert = unique.filter(c => !existingSet.has(c.email));
     if (toInsert.length) {
@@ -109,7 +131,7 @@ export default async function handler(req, res) {
     if (seqErr) throw seqErr;
     if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured', phase, sync });
 
-    const { data: pool, error: poolErr } = await sb.from('email_automation_pool').select('*').eq('status', 'active');
+    const { data: pool, error: poolErr } = await fetchAllRows(() => sb.from('email_automation_pool').select('*').eq('status', 'active'));
     if (poolErr) throw poolErr;
 
     const { data: unsubs } = await sb.from('email_unsubscribes').select('email');
@@ -162,11 +184,8 @@ export default async function handler(req, res) {
 
         const { messageId } = await sendInfobipEmail({ from, to: contact.email, subject: draft.subject, html, notifyUrl });
 
-        // NOTE: email_sends has no infobip_message_id or error column — the
-        // insert silently failed for every automation send until this was
-        // caught, because a nonexistent column makes PostgREST reject the
-        // whole batch and the result was never checked.
-        sendLogs.push({ id: messageId, draft_id: draft.id, email: contact.email, status: 'sent', sent_at: new Date().toISOString(), source: 'automation', automation_step: step.step_number });
+        // email_sends now has infobip_message_id, so delivery/open/click reports can match this row.
+        sendLogs.push({ id: messageId, infobip_message_id: messageId, draft_id: draft.id, email: contact.email, status: 'sent', sent_at: new Date().toISOString(), source: 'automation', automation_step: step.step_number });
         poolUpdates.push({ id: contact.id, current_step: step.step_number, last_sent_at: new Date().toISOString(), updated_at: new Date().toISOString() });
         sent++; remaining--;
       } catch (e) {
