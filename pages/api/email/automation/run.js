@@ -43,6 +43,9 @@ const MAX_PER_TICK = 300;
 // 24h" check made most contacts miss the next day's tick and slip a full day
 // (every step took 2 days). Comparing IST dates keeps "1 day" = next day's tick.
 const IST_OFFSET_MS = 330 * 60000;
+// How many past IST days of webinar attendees enter the pool on each sync.
+// 1 = yesterday only. Temporarily 3 (yesterday + 2 days before).
+const ENTRY_DAYS = 3;
 const istDayNumber = (ms) => Math.floor((ms + IST_OFFSET_MS) / 86400000);
 
 // Metabase can return a date as "2026-11-22", "2026-11-22T00:00:00+05:30" or
@@ -90,8 +93,9 @@ async function syncPoolFromMetabase() {
   const byEmail = new Map(candidates.map(c => [c.email, c]));
   const unique = [...byEmail.values()];
 
-  const yesterday = new Date(Date.now() + IST_OFFSET_MS - 86400000).toISOString().slice(0, 10);
-  const entrants = unique.filter(c => c.lastAttended === yesterday);
+  const entryDates = new Set();
+  for (let i = 1; i <= ENTRY_DAYS; i++) entryDates.add(new Date(Date.now() + IST_OFFSET_MS - i * 86400000).toISOString().slice(0, 10));
+  const entrants = unique.filter(c => entryDates.has(c.lastAttended));
   const nowIso = new Date().toISOString();
 
   let added = 0;
