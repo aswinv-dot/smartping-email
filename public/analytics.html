@@ -88,13 +88,14 @@ tr:hover td{background:#fafcff;cursor:pointer}
           <th>Campaign</th>
           <th>Date</th>
           <th>Sent</th>
+          <th>Delivered</th>
           <th>Opened</th>
           <th>Clicked</th>
           <th>Failed</th>
           <th>Unsub</th>
         </tr>
       </thead>
-      <tbody id="tbody"><tr><td colspan="7" class="empty"><span class="spin"></span>Loading...</td></tr></tbody>
+      <tbody id="tbody"><tr><td colspan="8" class="empty"><span class="spin"></span>Loading...</td></tr></tbody>
     </table>
   </div>
 
@@ -104,7 +105,7 @@ tr:hover td{background:#fafcff;cursor:pointer}
       <button class="close-btn" onclick="closeDetail()">×</button>
     </div>
     <table>
-      <thead><tr><th>Email</th><th>Status</th><th>Opened</th><th>Clicked</th><th>Sent At</th></tr></thead>
+      <thead><tr><th>Email</th><th>Status</th><th>Delivered</th><th>Opened</th><th>Clicked</th><th>Sent At</th></tr></thead>
       <tbody id="detail-tbody"></tbody>
     </table>
   </div>
@@ -157,7 +158,7 @@ async function load() {
   const rows = [];
   const PAGE = 1000;
   for (let off = 0; ; off += PAGE) {
-    const r = await fetch(`${SB}/rest/v1/email_sends?select=draft_id,email,status,opened_at,clicked_at,sent_at&order=sent_at.desc&limit=${PAGE}&offset=${off}`, {headers:sbH});
+    const r = await fetch(`${SB}/rest/v1/email_sends?select=draft_id,email,status,delivered_at,opened_at,clicked_at,sent_at,error&order=sent_at.desc&limit=${PAGE}&offset=${off}`, {headers:sbH});
     const page = await r.json();
     if (!Array.isArray(page)||!page.length) break;
     rows.push(...page);
@@ -168,7 +169,7 @@ async function load() {
   const unsubSet = new Set((await unsubR.json()).map(u=>u.email?.toLowerCase()));
 
   if (!Array.isArray(rows)||!rows.length) {
-    document.getElementById('tbody').innerHTML='<tr><td colspan="7" class="empty">No campaigns sent yet</td></tr>';
+    document.getElementById('tbody').innerHTML='<tr><td colspan="8" class="empty">No campaigns sent yet</td></tr>';
     return;
   }
 
@@ -177,9 +178,10 @@ async function load() {
   rows.forEach(r=>{
     const date = r.sent_at?.split('T')[0]||'';
     const key = `${r.draft_id}__${date}`;
-    if (!groups[key]) groups[key]={draft_id:r.draft_id,date,sent:0,opened:0,clicked:0,failed:0,unsub:0,rows:[]};
+    if (!groups[key]) groups[key]={draft_id:r.draft_id,date,sent:0,delivered:0,opened:0,clicked:0,failed:0,unsub:0,rows:[]};
     groups[key].sent++;
     if (r.status==='failed') groups[key].failed++;
+    if (r.delivered_at) groups[key].delivered++;
     if (r.opened_at) groups[key].opened++;
     if (r.clicked_at) groups[key].clicked++;
     if (unsubSet.has(r.email?.toLowerCase())) groups[key].unsub++;
@@ -192,6 +194,7 @@ async function load() {
       <td style="font-weight:700">${esc(draftMap[g.draft_id]||g.draft_id)}</td>
       <td style="color:var(--muted)">${g.date}</td>
       <td><span class="stat">${g.sent}</span></td>
+      <td><span class="stat green">${g.delivered}</span><span class="pct">${pct(g.delivered,g.sent)}</span></td>
       <td><span class="stat green">${g.opened}</span><span class="pct">${pct(g.opened,g.sent)}</span></td>
       <td><span class="stat blue">${g.clicked}</span><span class="pct">${pct(g.clicked,g.sent)}</span></td>
       <td><span class="stat red">${g.failed}</span><span class="pct">${pct(g.failed,g.sent)}</span></td>
@@ -207,6 +210,7 @@ function showDetail(rowsJson, name) {
     <tr>
       <td>${esc(r.email||'—')}</td>
       <td><span style="font-size:10px;font-weight:700;color:${r.status==='sent'?'var(--green)':'var(--red)'}">${r.status?.toUpperCase()}</span></td>
+      <td>${r.delivered_at?'✅ '+new Date(r.delivered_at).toLocaleTimeString('en-IN'):'—'}</td>
       <td>${r.opened_at?'✅ '+new Date(r.opened_at).toLocaleTimeString('en-IN'):'—'}</td>
       <td>${r.clicked_at?'✅ '+new Date(r.clicked_at).toLocaleTimeString('en-IN'):'—'}</td>
       <td style="color:var(--muted)">${r.sent_at?new Date(r.sent_at).toLocaleString('en-IN'):'—'}</td>
