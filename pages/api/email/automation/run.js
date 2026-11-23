@@ -18,19 +18,6 @@ function resolveTokens(html, contact) {
     .replace(/\{\{mobile\}\}/g, contact.mobile || '');
 }
 
-// Supabase returns at most 1000 rows per request, so large tables must be
-// read in pages or rows past the 1000th are silently never seen.
-async function fetchAllRows(build) {
-  const out = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await build().order('id', { ascending: true }).range(from, from + 999);
-    if (error) return { data: null, error };
-    out.push(...(data || []));
-    if (!data || data.length < 1000) break;
-  }
-  return { data: out, error: null };
-}
-
 // Hard ceiling per invocation, so a large pool can't try to push
 // thousands of sends through one synchronous serverless call and hit its
 // timeout. Purely a request-shape safety net. If more than this many are
@@ -43,34 +30,17 @@ const MAX_PER_TICK = 300;
 // 24h" check made most contacts miss the next day's tick and slip a full day
 // (every step took 2 days). Comparing IST dates keeps "1 day" = next day's tick.
 const IST_OFFSET_MS = 330 * 60000;
-// How many past IST days of webinar attendees enter the pool on each sync.
-// 1 = yesterday only. Temporarily 3 (yesterday + 2 days before).
-const ENTRY_DAYS = 3;
 const istDayNumber = (ms) => Math.floor((ms + IST_OFFSET_MS) / 86400000);
 
-// Metabase can return a date as "2026-11-22", "2026-11-22T00:00:00+05:30" or
-// "November 22, 2026". Reduce any of them to a YYYY-MM-DD key.
-function istDateKey(v) {
-  if (!v) return '';
-  const str = String(v).trim();
-  if (/^\d{4}-\d{2}-\d{2}/.test(str)) return str.slice(0, 10);
-  const d = new Date(str);
-  if (isNaN(d)) return '';
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-// Reads the Metabase card: everyone who attended an Opportunity Card webinar
-// in the last 60 days, with their CURRENT lead_status / lead_stage and the
-// date they last attended (last_attended_date, IST).
-//
-// Two jobs, both safe to repeat every day:
-//  1. ENTRY — only leads whose last_attended_date is YESTERDAY (IST) and who
-//     are not already in the pool are added. Their status and stage at that
-//     moment are saved once as initial_status / initial_stage (and as the
-//     first current_status / current_stage). Existing pool rows — whatever
-//     their status — are never re-added or reset (on_conflict do nothing).
-//  2. REFRESH — for every lead already in the pool who appears in the card,
-//     current_status / current_stage are updated to what the card says now.
+// Pulls today's webinar-attended leads straight from Metabase and adds
+// any NEW ones (by email) to the pool. Existing pool rows — whatever
+// their status (active mid-sequence, completed, removed) — are left
+// untouched via on_conflict do-nothing, so someone who attended a
+// webinar last week and already got step 1 never gets re-added/reset
+// just because they still show up in today's query. This is what makes
+// "yesterday 500 attended -> got email 1; today the query returns 900 ->
+// only the 400 new ones get email 1" work automatically, every day,
+// with no manual selection.
 async function syncPoolFromMetabase() {
   const res = await fetch(METABASE_EMAIL_URL, { headers: { 'Accept-Encoding': 'identity' } });
   const rows = await res.json();
@@ -78,37 +48,18 @@ async function syncPoolFromMetabase() {
 
   const attended = rows.filter(r => String(r.webinar_attended || '').trim().toLowerCase() === 'yes');
   const candidates = attended
-    .map(r => ({
-      email: String(r.email || '').toLowerCase().trim(),
-      fullname: r.fullname || r.name || '',
-      mobile: r.mobile || '',
-      lead_id: r.lead_id != null ? String(r.lead_id) : null,
-      status: r.lead_status || null,
-      stage: r.lead_stage || null,
-      lastAttended: istDateKey(r.last_attended_date || r.webinar_time_ist),
-    }))
+    .map(r => ({ email: String(r.email || '').toLowerCase().trim(), fullname: r.fullname || r.name || '', mobile: r.mobile || '' }))
     .filter(c => c.email);
 
   // Dedup within this batch (Metabase can repeat a lead across rows).
   const byEmail = new Map(candidates.map(c => [c.email, c]));
   const unique = [...byEmail.values()];
 
-  const entryDates = new Set();
-  for (let i = 1; i <= ENTRY_DAYS; i++) entryDates.add(new Date(Date.now() + IST_OFFSET_MS - i * 86400000).toISOString().slice(0, 10));
-  const entrants = unique.filter(c => entryDates.has(c.lastAttended));
-  const nowIso = new Date().toISOString();
-
   let added = 0;
-  if (entrants.length) {
-    const { data: existing } = await fetchAllRows(() => sb.from('email_automation_pool').select('id,email'));
+  if (unique.length) {
+    const { data: existing } = await sb.from('email_automation_pool').select('email');
     const existingSet = new Set((existing || []).map(e => e.email.toLowerCase()));
-    const toInsert = entrants
-      .filter(c => !existingSet.has(c.email))
-      .map(c => ({
-        email: c.email, fullname: c.fullname, mobile: c.mobile, lead_id: c.lead_id,
-        initial_status: c.status, initial_stage: c.stage,
-        current_status: c.status, current_stage: c.stage, current_updated_at: nowIso,
-      }));
+    const toInsert = unique.filter(c => !existingSet.has(c.email));
     if (toInsert.length) {
       const { error } = await sb.from('email_automation_pool').upsert(toInsert, { onConflict: 'email', ignoreDuplicates: true });
       if (error) throw error;
@@ -116,26 +67,7 @@ async function syncPoolFromMetabase() {
     }
   }
 
-  // Refresh current status/stage for leads already in the pool.
-  let refreshed = 0;
-  if (unique.length) {
-    const { data: pool } = await fetchAllRows(() => sb.from('email_automation_pool').select('id,email,lead_id,current_status,current_stage'));
-    const changes = [];
-    for (const p of pool || []) {
-      const c = byEmail.get(String(p.email || '').toLowerCase());
-      if (!c) continue;
-      if ((p.current_status || null) !== c.status || (p.current_stage || null) !== c.stage || (!p.lead_id && c.lead_id)) {
-        changes.push({ email: p.email, lead_id: p.lead_id || c.lead_id, current_status: c.status, current_stage: c.stage, current_updated_at: nowIso });
-      }
-    }
-    for (let i = 0; i < changes.length; i += 500) {
-      const { error } = await sb.from('email_automation_pool').upsert(changes.slice(i, i + 500), { onConflict: 'email' });
-      if (error) throw error;
-    }
-    refreshed = changes.length;
-  }
-
-  return { matched: entrants.length, added, refreshed };
+  return { matched: unique.length, added };
 }
 
 // Two separate daily moments, driven by `phase` in the POST body (see
@@ -177,7 +109,7 @@ export default async function handler(req, res) {
     if (seqErr) throw seqErr;
     if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured', phase, sync });
 
-    const { data: pool, error: poolErr } = await fetchAllRows(() => sb.from('email_automation_pool').select('*').eq('status', 'active'));
+    const { data: pool, error: poolErr } = await sb.from('email_automation_pool').select('*').eq('status', 'active');
     if (poolErr) throw poolErr;
 
     const { data: unsubs } = await sb.from('email_unsubscribes').select('email');
@@ -230,8 +162,11 @@ export default async function handler(req, res) {
 
         const { messageId } = await sendInfobipEmail({ from, to: contact.email, subject: draft.subject, html, notifyUrl });
 
-        // email_sends now has infobip_message_id, so delivery/open/click reports can match this row.
-        sendLogs.push({ id: messageId, infobip_message_id: messageId, draft_id: draft.id, email: contact.email, status: 'sent', sent_at: new Date().toISOString(), source: 'automation', automation_step: step.step_number });
+        // NOTE: email_sends has no infobip_message_id or error column — the
+        // insert silently failed for every automation send until this was
+        // caught, because a nonexistent column makes PostgREST reject the
+        // whole batch and the result was never checked.
+        sendLogs.push({ id: messageId, draft_id: draft.id, email: contact.email, status: 'sent', sent_at: new Date().toISOString(), source: 'automation', automation_step: step.step_number });
         poolUpdates.push({ id: contact.id, current_step: step.step_number, last_sent_at: new Date().toISOString(), updated_at: new Date().toISOString() });
         sent++; remaining--;
       } catch (e) {
