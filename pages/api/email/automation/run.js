@@ -11,7 +11,8 @@ const sb = createClient(
 // hand-picked. Filtered here to rows where webinar_attended = 'Yes'.
 const METABASE_EMAIL_URL = 'https://metabase.terratern.com/api/public/card/d14792bd-69e5-4d64-b693-1f70153724d0/query/json';
 
-const FOOTER_ADDRESS = 'TerraTern · HQ-Bangalore (India), Ground Floor, HustleHub 1703, 17th Cross Road, HSR Layout Sector 4, Bangalore, Karnataka 560102';
+const FOOTER_ADDRESS = 'TerraTern · Ground Floor, HustleHub 1703, 17th Cross Road, HSR Layout Sector 4, Bangalore, Karnataka 560102';
+const MAPS_URL = 'https://maps.app.goo.gl/2t5EJgFcnitifG1c8';
 
 // Plain-text twin of the HTML body, so the email goes out as multipart.
 function htmlToText(html) {
@@ -244,9 +245,9 @@ export default async function handler(req, res) {
       try {
         const unsubUrl = `${baseUrl}/api/email/unsubscribe?email=${encodeURIComponent(contact.email)}`;
         const bodyHtml = resolveTokens(draft.body, contact);
-        const footerHtml = `<br/><hr/><p style="font-size:11px;color:#999;line-height:1.5">You're receiving this email because you opted in. <a href="${unsubUrl}">Unsubscribe</a><br/>${FOOTER_ADDRESS}</p>`;
+        const footerHtml = `<br/><hr/><p style="font-size:11px;color:#999;line-height:1.5">You're receiving this email because you opted in. <a href="${unsubUrl}">Unsubscribe</a><br/><a href="${MAPS_URL}" style="color:#999;text-decoration:underline">${FOOTER_ADDRESS}</a></p>`;
         const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${String(draft.subject || '').replace(/</g, '&lt;')}</title></head><body>${bodyHtml}${footerHtml}</body></html>`;
-        const text = `${htmlToText(bodyHtml)}\n\n----\nYou're receiving this email because you opted in. Unsubscribe: ${unsubUrl}\n${FOOTER_ADDRESS}`;
+        const text = `${htmlToText(bodyHtml)}\n\n----\nYou're receiving this email because you opted in. Unsubscribe: ${unsubUrl}\n${FOOTER_ADDRESS}\n${MAPS_URL}`;
         const from = `${draft.from_name} <${process.env.INFOBIP_SENDER_EMAIL}>`;
 
         const { messageId } = await sendInfobipEmail({ from, to: contact.email, subject: draft.subject, html, text, notifyUrl });
