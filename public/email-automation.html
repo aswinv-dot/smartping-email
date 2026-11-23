@@ -140,6 +140,30 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
     <div class="form-hint" style="margin-top:10px">Initial stage is saved once, when the lead enters the pool. Current stage is refreshed from Metabase on every daily sync.</div>
   </div>
 
+  <!-- CONVERSION -->
+  <div class="card">
+    <div class="sec-label">Conversion — pool leads who paid after entering the pool</div>
+    <div class="grid4" style="margin-bottom:14px">
+      <div class="stat-tile"><div class="stat-num" id="cv-original">—</div><div class="stat-label">Original pool (ever entered)</div></div>
+      <div class="stat-tile"><div class="stat-num" id="cv-active">—</div><div class="stat-label">Active (not converted)</div></div>
+      <div class="stat-tile"><div class="stat-num" id="cv-converted">—</div><div class="stat-label">Converted</div></div>
+      <div class="stat-tile"><div class="stat-num" id="cv-rate">—</div><div class="stat-label">Conversion %</div></div>
+    </div>
+    <div class="grid4" style="margin-bottom:14px">
+      <div class="stat-tile"><div class="stat-num" id="cv-tat">—</div><div class="stat-label">Avg days: lead created → paid</div></div>
+      <div class="stat-tile"><div class="stat-num" id="cv-median">—</div><div class="stat-label">Median days (same)</div></div>
+      <div class="stat-tile"><div class="stat-num" id="cv-entry">—</div><div class="stat-label">Avg days: pool entry → paid</div></div>
+      <div class="stat-tile"><div class="stat-num" id="cv-rev">—</div><div class="stat-label">First-payment revenue (ex-GST)</div></div>
+    </div>
+    <div class="table-wrap" style="max-height:220px">
+      <table>
+        <thead><tr><th>Initial status</th><th>In pool</th><th>Converted</th><th>Conv %</th></tr></thead>
+        <tbody id="cv-tbody"></tbody>
+      </table>
+    </div>
+    <div class="form-hint" id="cv-hint" style="margin-top:10px">Paid = first payment (installment 1, status 3, amount &gt; 0). Only payments dated on or after the day the lead entered the pool count. Completed, removed and still-active counts are shown without converted leads.</div>
+  </div>
+
   <!-- POOL -->
   <div class="card">
     <div class="sec-label">Pool — auto-synced from Metabase (webinar attended)</div>
@@ -357,6 +381,23 @@ function renderMovement(){
 async function removeFromPool(email){
   try{ await fetch(`${POOL_API}?email=${encodeURIComponent(email)}`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}
 }
+
+async function loadConversion(){
+  try{
+    const r = await fetch('/api/email/automation/conversion'); const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    const c = d.counts||{};
+    const set = (id,v)=>{ document.getElementById(id).textContent = v; };
+    set('cv-original', c.original||0); set('cv-active', c.active_not_converted||0);
+    set('cv-converted', c.converted||0); set('cv-rate', (d.conversion_rate||0)+'%');
+    set('cv-tat', d.avg_tat_days ?? '—'); set('cv-median', d.median_tat_days ?? '—');
+    set('cv-entry', d.avg_days_entry_to_pay ?? '—');
+    set('cv-rev', d.revenue_ex_gst ? '₹'+Number(d.revenue_ex_gst).toLocaleString('en-IN') : '—');
+    const rows = d.by_initial_status||[];
+    document.getElementById('cv-tbody').innerHTML = rows.length ? rows.map(x=>`<tr><td>${esc(x.status)}</td><td>${x.total}</td><td>${x.converted}</td><td>${x.rate}%</td></tr>`).join('') : '<tr><td colspan="4"><div class="empty-box">No pool leads yet.</div></td></tr>';
+  }catch(e){ const h=document.getElementById('cv-hint'); if(h) h.textContent='Could not load conversion: '+e.message; }
+}
+loadConversion();
 </script>
 </body>
 </html>
