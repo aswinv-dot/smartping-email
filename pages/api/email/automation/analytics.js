@@ -6,11 +6,14 @@ const sb = createClient(
 );
 
 // Per-step breakdown of automation performance: for every step in the
-// current sequence, how many sends went out on that step, and of those
+// current sequence, how many emails went out on that step, and of those
 // how many were delivered / opened / clicked / failed. Purely a read of
-// email_sends (source='automation'), grouped by automation_step — every
-// number here is already being logged by automation/run.js and stamped
-// by webhook-infobip.js, nothing new to track.
+// email_sends (source='automation'), grouped by automation_step.
+//
+//  - sent      = every automation email handed to Infobip for that step
+//  - delivered = rows with delivered_at (stamped by webhook-infobip.js)
+//  - failed    = rows the webhook marked failed (REJECTED / UNDELIVERABLE)
+//  - opened / clicked = rows with opened_at / clicked_at
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -20,16 +23,16 @@ export default async function handler(req, res) {
       .order('step_number', { ascending: true });
     if (seqErr) throw seqErr;
 
-    // Pull all automation sends. Paginate defensively in case a single
-    // fetch would otherwise be capped by PostgREST's default row limit.
+    // Paginate with a stable order so no row is skipped or repeated between pages.
     let sends = [];
     let from = 0;
     const PAGE = 1000;
     for (;;) {
       const { data, error } = await sb
         .from('email_sends')
-        .select('automation_step, status, sent_at, opened_at, clicked_at')
+        .select('automation_step, status, delivered_at, opened_at, clicked_at')
         .eq('source', 'automation')
+        .order('id', { ascending: true })
         .range(from, from + PAGE - 1);
       if (error) throw error;
       sends = sends.concat(data || []);
@@ -37,60 +40,39 @@ export default async function handler(req, res) {
       from += PAGE;
     }
 
+    const blank = () => ({ sent: 0, failed: 0, delivered: 0, opened: 0, clicked: 0 });
     const byStep = new Map();
     for (const s of sends) {
       const step = s.automation_step;
       if (!step) continue;
-      if (!byStep.has(step)) byStep.set(step, { sent: 0, failed: 0, delivered: 0, opened: 0, clicked: 0 });
+      if (!byStep.has(step)) byStep.set(step, blank());
       const bucket = byStep.get(step);
+      bucket.sent++;
       if (s.status === 'failed') bucket.failed++;
-      else {
-        bucket.sent++;
-        // No separate "delivered" timestamp exists in this schema — a row
-        // that isn't 'failed' and has a sent_at is treated as delivered.
-        if (s.sent_at) bucket.delivered++;
-      }
+      if (s.delivered_at) bucket.delivered++;
       if (s.opened_at) bucket.opened++;
       if (s.clicked_at) bucket.clicked++;
     }
 
     const pct = (n, d) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0);
-
-    const steps = (sequence || []).map(seq => {
-      const b = byStep.get(seq.step_number) || { sent: 0, failed: 0, delivered: 0, opened: 0, clicked: 0 };
-      byStep.delete(seq.step_number);
-      return {
-        step_number: seq.step_number,
-        subject: seq.email_drafts?.subject || `Step ${seq.step_number}`,
-        delay_days: seq.delay_days,
-        sent: b.sent,
-        failed: b.failed,
-        delivered: b.delivered,
-        opened: b.opened,
-        clicked: b.clicked,
-        delivered_rate: pct(b.delivered, b.sent),
-        open_rate: pct(b.opened, b.sent),
-        click_rate: pct(b.clicked, b.sent),
-      };
+    const shape = (step_number, subject, delay_days, b) => ({
+      step_number, subject, delay_days,
+      sent: b.sent, failed: b.failed, delivered: b.delivered, opened: b.opened, clicked: b.clicked,
+      delivered_rate: pct(b.delivered, b.sent),
+      open_rate: pct(b.opened, b.sent),
+      click_rate: pct(b.clicked, b.sent),
     });
 
-    // Any step numbers left in byStep belonged to sends from a sequence
-    // step that's since been edited/removed — still show them so the
-    // numbers aren't silently dropped.
+    const steps = (sequence || []).map(seq => {
+      const b = byStep.get(seq.step_number) || blank();
+      byStep.delete(seq.step_number);
+      return shape(seq.step_number, seq.email_drafts?.subject || `Step ${seq.step_number}`, seq.delay_days, b);
+    });
+
+    // Step numbers left over belonged to a sequence step that's since been
+    // edited/removed — still show them so the numbers aren't silently dropped.
     for (const [stepNum, b] of byStep.entries()) {
-      steps.push({
-        step_number: stepNum,
-        subject: `Step ${stepNum} (no longer in sequence)`,
-        delay_days: null,
-        sent: b.sent,
-        failed: b.failed,
-        delivered: b.delivered,
-        opened: b.opened,
-        clicked: b.clicked,
-        delivered_rate: pct(b.delivered, b.sent),
-        open_rate: pct(b.opened, b.sent),
-        click_rate: pct(b.clicked, b.sent),
-      });
+      steps.push(shape(stepNum, `Step ${stepNum} (no longer in sequence)`, null, b));
     }
     steps.sort((a, b) => a.step_number - b.step_number);
 
@@ -100,7 +82,7 @@ export default async function handler(req, res) {
       delivered: acc.delivered + s.delivered,
       opened: acc.opened + s.opened,
       clicked: acc.clicked + s.clicked,
-    }), { sent: 0, failed: 0, delivered: 0, opened: 0, clicked: 0 });
+    }), blank());
 
     return res.status(200).json({
       success: true,

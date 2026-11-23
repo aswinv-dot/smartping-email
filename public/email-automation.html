@@ -122,6 +122,24 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
     <div class="form-hint" id="analytics-hint" style="margin-top:10px"></div>
   </div>
 
+  <!-- DISPOSITION MOVEMENT -->
+  <div class="card">
+    <div class="sec-label">Disposition Movement — stage when the lead entered the pool vs. stage now</div>
+    <div class="grid4" style="margin-bottom:14px">
+      <div class="stat-tile"><div class="stat-num" id="mv-tracked">0</div><div class="stat-label">Leads tracked</div></div>
+      <div class="stat-tile"><div class="stat-num" id="mv-same">0</div><div class="stat-label">Same stage</div></div>
+      <div class="stat-tile"><div class="stat-num" id="mv-changed">0</div><div class="stat-label">Stage changed</div></div>
+      <div class="stat-tile"><div class="stat-num" id="mv-untracked">0</div><div class="stat-label">No initial stage saved</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Initial stage</th><th>Current stage</th><th>Leads</th></tr></thead>
+        <tbody id="move-tbody"></tbody>
+      </table>
+    </div>
+    <div class="form-hint" style="margin-top:10px">Initial stage is saved once, when the lead enters the pool. Current stage is refreshed from Metabase on every daily sync.</div>
+  </div>
+
   <!-- POOL -->
   <div class="card">
     <div class="sec-label">Pool — auto-synced from Metabase (webinar attended)</div>
@@ -134,10 +152,15 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px">
       <div style="font-size:12px;color:var(--muted);font-weight:600" id="pool-count">0 contacts</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="pool-search" class="form-input" style="width:200px;padding:6px 10px" placeholder="Search email / name" oninput="renderPool()"/>
+        <select id="pool-stage-filter" class="form-select" style="width:190px;padding:6px 10px" onchange="renderPool()"><option value="">All current stages</option></select>
+        <button class="btn-ghost" id="pool-more" style="display:none;padding:6px 12px" onclick="poolLimit=1e9;renderPool()">Show all</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Emails Sent</th><th>Status</th><th>Last sent</th><th></th></tr></thead>
+        <thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Step</th><th>Status</th><th>Initial (status / stage)</th><th>Current (status / stage)</th><th>Last email</th><th>Last sent</th><th></th></tr></thead>
         <tbody id="pool-tbody"></tbody>
       </table>
     </div>
@@ -271,22 +294,65 @@ async function loadAnalytics(){
 }
 
 // ── POOL ─────────────────────────────────────────────────────
+let poolData = [];
+let poolLimit = 200;
+const dash = (a, b) => [a, b].filter(Boolean).join(' / ') || '—';
+
 async function loadPool(){
   try{
     const r = await fetch(POOL_API); const d = await r.json();
-    document.getElementById('pool-count').textContent = `${d.counts.active||0} active · ${d.counts.completed||0} completed · ${d.total} total`;
-    const rows = (d.pool||[]).filter(p=>p.status!=='removed').slice(0,200);
-    document.getElementById('pool-tbody').innerHTML = rows.length ? rows.map(p=>`
-      <tr>
-        <td>${esc(p.email)}</td>
-        <td>${esc(p.fullname||'—')}</td>
-        <td>${p.added_at ? new Date(p.added_at).toLocaleDateString('en-IN') : '—'}</td>
-        <td>${p.current_step}</td>
-        <td>${esc(p.status)}</td>
-        <td>${p.last_sent_at ? new Date(p.last_sent_at).toLocaleDateString('en-IN') : '—'}</td>
-        <td><button class="btn-danger" style="padding:3px 8px" onclick="removeFromPool('${esc(p.email)}')">Remove</button></td>
-      </tr>`).join('') : '<tr><td colspan="7"><div class="empty-box">Pool is empty.</div></td></tr>';
+    poolData = d.pool || [];
+    const c = d.counts || {};
+    document.getElementById('pool-count').textContent = `${c.active||0} active · ${c.completed||0} completed · ${c.removed||0} removed · ${d.total} total`;
+    // stage filter options come from the stages actually present
+    const sel = document.getElementById('pool-stage-filter');
+    const keep = sel.value;
+    const stages = [...new Set(poolData.map(p => p.current_stage).filter(Boolean))].sort();
+    sel.innerHTML = '<option value="">All current stages</option>' + stages.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+    sel.value = stages.includes(keep) ? keep : '';
+    renderPool(); renderMovement();
   }catch(e){}
+}
+
+function renderPool(){
+  const q = (document.getElementById('pool-search').value || '').toLowerCase().trim();
+  const stage = document.getElementById('pool-stage-filter').value;
+  let rows = poolData.filter(p => p.status !== 'removed');
+  if (q) rows = rows.filter(p => (p.email||'').toLowerCase().includes(q) || (p.fullname||'').toLowerCase().includes(q));
+  if (stage) rows = rows.filter(p => p.current_stage === stage);
+  const total = rows.length;
+  rows = rows.slice(0, poolLimit);
+  document.getElementById('pool-more').style.display = total > rows.length ? '' : 'none';
+  document.getElementById('pool-tbody').innerHTML = rows.length ? rows.map(p=>`
+    <tr>
+      <td>${esc(p.email)}</td>
+      <td>${esc(p.fullname||'—')}</td>
+      <td>${p.added_at ? new Date(p.added_at).toLocaleDateString('en-IN') : '—'}</td>
+      <td>${p.current_step}</td>
+      <td>${esc(p.status)}</td>
+      <td>${esc(dash(p.initial_status, p.initial_stage))}</td>
+      <td>${esc(dash(p.current_status, p.current_stage))}</td>
+      <td>${esc(p.last_email_state || '—')}</td>
+      <td>${p.last_sent_at ? new Date(p.last_sent_at).toLocaleDateString('en-IN') : '—'}</td>
+      <td><button class="btn-danger" style="padding:3px 8px" onclick="removeFromPool('${esc(p.email)}')">Remove</button></td>
+    </tr>`).join('') : '<tr><td colspan="10"><div class="empty-box">Pool is empty.</div></td></tr>';
+}
+
+function renderMovement(){
+  const live = poolData.filter(p => p.status !== 'removed');
+  const tracked = live.filter(p => p.initial_stage && p.current_stage);
+  const same = tracked.filter(p => p.initial_stage === p.current_stage).length;
+  document.getElementById('mv-tracked').textContent = tracked.length;
+  document.getElementById('mv-same').textContent = same;
+  document.getElementById('mv-changed').textContent = tracked.length - same;
+  document.getElementById('mv-untracked').textContent = live.length - tracked.length;
+  const pairs = new Map();
+  tracked.forEach(p => { const k = p.initial_stage + '\u0000' + p.current_stage; pairs.set(k, (pairs.get(k)||0) + 1); });
+  const list = [...pairs.entries()].map(([k, n]) => { const [a, b] = k.split('\u0000'); return {a, b, n}; })
+    .sort((x, y) => (x.a === x.b) - (y.a === y.b) || y.n - x.n);
+  document.getElementById('move-tbody').innerHTML = list.length
+    ? list.map(x => `<tr><td>${esc(x.a)}</td><td>${esc(x.b)}${x.a === x.b ? ' <span style="color:var(--muted2)">(same)</span>' : ''}</td><td>${x.n}</td></tr>`).join('')
+    : '<tr><td colspan="3"><div class="empty-box">No leads with a saved initial stage yet.</div></td></tr>';
 }
 async function removeFromPool(email){
   try{ await fetch(`${POOL_API}?email=${encodeURIComponent(email)}`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}

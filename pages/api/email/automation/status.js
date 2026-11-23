@@ -5,15 +5,28 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI'
 );
 
+// Supabase returns at most 1000 rows per request, so the pool is read in pages.
+async function fetchAllPool() {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from('email_automation_pool').select('id,status,current_step')
+      .order('id', { ascending: true }).range(from, from + 999);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
+
 // One-shot GET for the automation page: engine state, sequence, pool
 // counts, all in one call.
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    const [{ data: state }, { data: sequence }, { data: pool }, { count: sentTodayAuto }] = await Promise.all([
+    const [{ data: state }, { data: sequence }, pool, { count: sentTodayAuto }] = await Promise.all([
       sb.from('email_automation_state').select('*').eq('id', 'default').single(),
       sb.from('email_automation_sequence').select('*, email_drafts(id,subject,from_name)').order('step_number', { ascending: true }),
-      sb.from('email_automation_pool').select('id,status,current_step'),
+      fetchAllPool(),
       sb.from('email_sends').select('id', { count: 'exact', head: true }).eq('source', 'automation').eq('status', 'sent')
         .gte('created_at', `${new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10)}T00:00:00Z`),
     ]);
