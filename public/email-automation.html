@@ -172,6 +172,10 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
       <div class="stat-tile"><div class="stat-num" id="stat-mb-added">—</div><div class="stat-label">New to pool today</div></div>
       <div class="stat-tile" style="grid-column:span 2"><div class="stat-num" style="font-size:13px" id="stat-mb-synced">—</div><div class="stat-label">Last synced</div></div>
     </div>
+    <div class="btn-row" style="margin:0 0 10px">
+      <button class="btn-ghost" id="sync-btn" onclick="syncNow()">⟳ Sync Now (Metabase → pool, no sending)</button>
+      <span class="status-msg" id="sync-msg"></span>
+    </div>
     <div class="form-hint">The pool refills itself every tick — no manual adding. Anyone who shows up as webinar_attended='Yes' in Metabase and isn't already in the pool gets added and receives Step 1 on the next tick. Existing/completed/removed contacts are never re-added.</div>
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 8px">
@@ -377,6 +381,20 @@ function renderMovement(){
   document.getElementById('move-tbody').innerHTML = list.length
     ? list.map(x => `<tr><td>${esc(x.a)}</td><td>${esc(x.b)}${x.a === x.b ? ' <span style="color:var(--muted2)">(same)</span>' : ''}</td><td>${x.n}</td></tr>`).join('')
     : '<tr><td colspan="3"><div class="empty-box">No leads with a saved initial stage yet.</div></td></tr>';
+}
+async function syncNow(){
+  const b = document.getElementById('sync-btn'); b.disabled = true;
+  flash('sync-msg','Syncing...','ok');
+  try{
+    const r = await fetch(RUN_API, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({phase:'sync'})});
+    const d = await r.json();
+    if(d.error) throw new Error(d.error);
+    const x = d.sync||{};
+    flash('sync-msg', `✓ Synced: matched ${x.matched??0}, added ${x.added??0}, refreshed ${x.refreshed??0}`, 'ok');
+    loadStatus(); loadPool();
+    if(typeof loadConversion==='function') loadConversion();
+  }catch(e){ flash('sync-msg','Failed: '+e.message,'err'); }
+  b.disabled = false;
 }
 async function removeFromPool(email){
   try{ await fetch(`${POOL_API}?email=${encodeURIComponent(email)}`, {method:'DELETE'}); loadPool(); loadStatus(); }catch(e){}
