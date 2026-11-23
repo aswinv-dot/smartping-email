@@ -6,9 +6,27 @@ const sb = createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI'
 );
 
+const FOOTER_ADDRESS = 'TerraTern · HQ-Bangalore (India), Ground Floor, HustleHub 1703, 17th Cross Road, HSR Layout Sector 4, Bangalore, Karnataka 560102';
+
+// Plain-text twin of the HTML body, so the email goes out as multipart.
+function htmlToText(html) {
+  return String(html || '')
+    .replace(/<a\s[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi, (m, href, label) => {
+      const t = label.replace(/<[^>]+>/g, '').trim();
+      return t && t !== href ? `${t} (${href})` : href;
+    })
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n')
+    .replace(/<hr\s*\/?>/gi, '\n----\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function resolveTokens(html, contact) {
   return html
-    .replace(/\{\{name\}\}/g, contact.fullname || '')
+    .replace(/\{\{name\}\}/g, (contact.fullname || '').trim() || 'there')
     .replace(/\{\{email\}\}/g, contact.email || '')
     .replace(/\{\{mobile\}\}/g, contact.mobile || '');
 }
@@ -69,14 +87,18 @@ export default async function handler(req, res) {
       if (unsubSet.has(em)) { skipped++; continue; }
       if (sentSet.has(em)) { already++; continue; }
       try {
-        let html = resolveTokens(draft.body, c);
-        html += `<br/><hr/><p style="font-size:11px;color:#999">You're receiving this email because you opted in. <a href="${baseUrl}/api/email/unsubscribe?email=${encodeURIComponent(c.email)}">Unsubscribe</a></p>`;
+        const unsubUrl = `${baseUrl}/api/email/unsubscribe?email=${encodeURIComponent(c.email)}`;
+        const bodyHtml = resolveTokens(draft.body, c);
+        const footerHtml = `<br/><hr/><p style="font-size:11px;color:#999;line-height:1.5">You're receiving this email because you opted in. <a href="${unsubUrl}">Unsubscribe</a><br/>${FOOTER_ADDRESS}</p>`;
+        const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>${String(draft.subject || '').replace(/</g, '&lt;')}</title></head><body>${bodyHtml}${footerHtml}</body></html>`;
+        const text = `${htmlToText(bodyHtml)}\n\n----\nYou're receiving this email because you opted in. Unsubscribe: ${unsubUrl}\n${FOOTER_ADDRESS}`;
 
         const { messageId } = await sendInfobipEmail({
           from,
           to: c.email,
           subject: draft.subject,
           html,
+          text,
           notifyUrl,
         });
 
