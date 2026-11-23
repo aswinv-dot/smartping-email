@@ -1,0 +1,500 @@
+From 3059a1a53bc8582b1d191c7bd795acae221a80b9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 07:33:43 +0000
+Subject: [PATCH] Migrate terratern-linktree as a config-driven public page
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Adds public/linktree.html (the public "link in bio" page) and
+public/linktree-config.js (all editable content: tagline, stats,
+the full link list with icon/title/subtitle/url/badge, and footer)
+pulled out of the page into one plain config file, following the
+same "edit only this file" convention already used in
+terratern-ads-landing-page's config.js.
+
+This is a standalone public page — no shell/sidebar wrap, since it's
+a public marketing link people tap from social bios, not an internal
+CRM tool. To change what it shows, edit public/linktree-config.js and
+push; no build step, database, or live admin UI involved.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ public/linktree-config.js | 105 ++++++++++++
+ public/linktree.html      | 351 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 456 insertions(+)
+ create mode 100644 public/linktree-config.js
+ create mode 100644 public/linktree.html
+
+diff --git a/public/linktree-config.js b/public/linktree-config.js
+new file mode 100644
+index 0000000..00386de
+--- /dev/null
++++ b/public/linktree-config.js
+@@ -0,0 +1,105 @@
++// ============================================================
++//  TERRATERN LINKTREE — CONFIG FILE
++//  Edit ONLY this file to change the page's stats or links.
++//  Do not touch linktree.html unless you're changing the layout.
++//
++//  Each link:
++//    icon     - emoji shown before the title
++//    title    - bold heading text
++//    subtitle - smaller description line
++//    url      - where the button goes (keep utm params for tracking)
++//    badge    - optional: { text: "Limited Slots", style: "urgent" }
++//               style is "urgent" (red, pulsing) or "normal" (gold).
++//               Omit "badge" entirely for no badge.
++// ============================================================
++
++const LINKTREE_CONFIG = {
++
++  tagline: "One Stop Solution to Global Talent Mobility",
++
++  stats: [
++    { number: "2M+", label: "Trusted Users" },
++    { number: "99.7%", label: "Visa Success Rate" },
++  ],
++
++  links: [
++    {
++      icon: "📅",
++      title: "Book 1:1 Counselling",
++      subtitle: "With our Certified Immigration Advisor",
++      url: "https://terratern.com/webinar/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=Webinar_Page",
++      badge: { text: "Limited Slots", style: "urgent" },
++    },
++    {
++      icon: "🤖",
++      title: "AI Eligibility Checker",
++      subtitle: "Get the best options tailored for you",
++      url: "https://terratern.com/ai-chat-eligibility-tool/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=AI_Eligibility",
++    },
++    {
++      icon: "👨‍⚕️",
++      title: "Nursing in Germany",
++      subtitle: "100% Job Guaranteed for GNM/B.Sc Nursing graduates",
++      url: "https://terratern.com/immigration-consultation-nursing-germany-1/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=GHC_Healthcare",
++      badge: { text: "High in Demand", style: "normal" },
++    },
++    {
++      icon: "🎓",
++      title: "Ausbildung in Germany",
++      subtitle: "100% Job Guaranteed for Diploma Holders and Engineers",
++      url: "https://terratern.com/immigration-consultation-ausbildung-germany-1/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=Ausbildung/",
++      badge: { text: "Best Seller", style: "normal" },
++    },
++    {
++      icon: "🇩🇪",
++      title: "Germany Opportunity Card",
++      subtitle: "No offer letter required",
++      url: "https://terratern.com/immigration-consultation-germany-1/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=GOC",
++    },
++    {
++      icon: "🇦🇺",
++      title: "Australia PR",
++      subtitle: "No blocked account needed",
++      url: "https://terratern.com/immigration-consultation-australia-1/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=AustPR",
++    },
++    {
++      icon: "🇨🇦",
++      title: "Canada PR",
++      subtitle: "Easy pathway to the US",
++      url: "https://terratern.com/immigration-consultation-canada-1/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=CanadaPR",
++    },
++    {
++      icon: "📚",
++      title: "Learn IELTS / German",
++      subtitle: "India's Top Certified Language Trainers · 6000+ candidates cleared exams · 15k+ mock tests · 92% success rate",
++      url: "https://terratern-learn-links.vercel.app/",
++    },
++    {
++      icon: "⭐",
++      title: "Success Stories",
++      subtitle: "See professionals who received their visa faster",
++      url: "https://terratern.com/success-stories/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=SuccessStories",
++    },
++    {
++      icon: "💬",
++      title: "Testimonials",
++      subtitle: "Hear from our satisfied clients",
++      url: "https://terratern.com/customer-reviews/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=Testimonials",
++    },
++    {
++      icon: "💰",
++      title: "Salaries Abroad",
++      subtitle: "Compare international salary packages",
++      url: "https://terratern.com/salaries/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=SalariesPage",
++    },
++  ],
++
++  footer: {
++    phone: "📞 8062358632",
++    address: "📍 19th Main Rd, 1st Sector, HSR Layout, Bengaluru 560102",
++    mapUrl: "https://maps.app.goo.gl/QRhtoT3noPWvvZCB7?g_st=ipc",
++    privacyUrl: "https://terratern.com/privacy-policy/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=PrivacyPolicy",
++    termsUrl: "https://terratern.com/terms-and-condition/?utm_source=Social_Media&utm_medium=Link_in_bio&utm_adset=TNC",
++    copyright: "© 2026 TerraTern. All rights reserved.",
++  },
++};
+diff --git a/public/linktree.html b/public/linktree.html
+new file mode 100644
+index 0000000..5e96bf6
+--- /dev/null
++++ b/public/linktree.html
+@@ -0,0 +1,351 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++    <script type="text/javascript">
++    (function(c,l,a,r,i,t,y){
++        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
++        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
++        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
++    })(window, document, "clarity", "script", "lubdfw20lq");
++</script>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>TerraTern</title>
++    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
++    <style>
++        * {
++            margin: 0;
++            padding: 0;
++            box-sizing: border-box;
++        }
++
++        body {
++            font-family: 'Poppins', sans-serif;
++            background: #255cc1;
++            min-height: 100vh;
++            padding: 20px;
++            display: flex;
++            flex-direction: column;
++            align-items: center;
++        }
++
++        .container {
++            max-width: 680px;
++            width: 100%;
++            margin: 0 auto;
++        }
++
++        .logo-container {
++            display: flex;
++            justify-content: center;
++            margin-bottom: 2px;
++        }
++
++        .logo {
++            width: 150px;
++            height: 150px;
++            border-radius: 20px;
++            display: flex;
++            align-items: center;
++            justify-content: center;
++            overflow: hidden;
++        }
++
++        .logo img {
++            width: 100%;
++            height: 100%;
++            object-fit: contain;
++        }
++
++        .tagline {
++            text-align: center;
++            color: white;
++            margin-top: 8px;
++            margin-bottom: 8px;
++        }
++
++        .tagline-main {
++            font-size: 18px;
++            font-weight: 600;
++            margin-bottom: 12px;
++            line-height: 1.4;
++        }
++
++        .stats {
++            display: flex;
++            justify-content: center;
++            gap: 24px;
++            flex-wrap: wrap;
++            margin-bottom: 24px;
++        }
++
++        .stat-item {
++            text-align: center;
++        }
++
++        .stat-number {
++            font-size: 24px;
++            font-weight: 700;
++            color: #f1c819;
++            display: block;
++        }
++
++        .stat-label {
++            font-size: 12px;
++            font-weight: 400;
++            color: #9acbfd;
++            margin-top: 2px;
++        }
++
++        .links {
++            display: flex;
++            flex-direction: column;
++            gap: 16px;
++            margin-bottom: 32px;
++        }
++
++        .link-button {
++            background: white;
++            color: #00215c;
++            text-decoration: none;
++            padding: 20px 24px;
++            border-radius: 12px;
++            font-weight: 500;
++            font-size: 15px;
++            text-align: left;
++            line-height: 1.4;
++            transition: all 0.3s ease;
++            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
++            position: relative;
++            overflow: hidden;
++            display: flex;
++            flex-direction: column;
++            gap: 4px;
++        }
++
++        .link-title {
++            font-weight: 600;
++            font-size: 16px;
++            display: flex;
++            align-items: center;
++            gap: 8px;
++            flex-wrap: wrap;
++        }
++
++        .link-subtitle {
++            font-size: 13px;
++            color: #4a5568;
++            font-weight: 400;
++            line-height: 1.5;
++            margin-left: 28px;
++        }
++
++        .badge {
++            display: inline-block;
++            background: linear-gradient(135deg, #f1c819 0%, #f39c12 100%);
++            color: #00215c;
++            font-size: 10px;
++            font-weight: 700;
++            padding: 4px 8px;
++            border-radius: 10px;
++            margin-left: 6px;
++            text-transform: uppercase;
++            letter-spacing: 0.3px;
++            white-space: nowrap;
++            flex-shrink: 0;
++        }
++
++        .badge-urgent {
++            background: linear-gradient(135deg, #ff4757 0%, #e84118 100%);
++            color: white;
++            animation: pulse 2s ease-in-out infinite;
++        }
++
++        @keyframes pulse {
++            0%, 100% { opacity: 1; }
++            50% { opacity: 0.8; }
++        }
++
++        .link-button::before {
++            content: '';
++            position: absolute;
++            top: 0;
++            left: -100%;
++            width: 100%;
++            height: 100%;
++            background: linear-gradient(90deg, transparent, rgba(154, 203, 253, 0.3), transparent);
++            transition: left 0.5s ease;
++        }
++
++        .link-button:hover::before {
++            left: 100%;
++        }
++
++        .link-button:hover {
++            transform: translateY(-2px);
++            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
++            background: #f1c819;
++        }
++
++        .link-button:active {
++            transform: translateY(0);
++        }
++
++        .link-icon {
++            margin-right: 8px;
++        }
++
++        .footer {
++            text-align: center;
++            color: white;
++            margin-top: 32px;
++            padding-top: 24px;
++            border-top: 1px solid rgba(255, 255, 255, 0.2);
++        }
++
++        .footer-links {
++            display: flex;
++            justify-content: center;
++            gap: 24px;
++            margin-bottom: 16px;
++            flex-wrap: wrap;
++        }
++
++        .footer-link {
++            color: #9acbfd;
++            text-decoration: none;
++            font-size: 14px;
++            transition: color 0.3s ease;
++        }
++
++        .footer-link:hover {
++            color: #f1c819;
++        }
++
++        .contact {
++            font-size: 18px;
++            font-weight: 600;
++            margin-bottom: 12px;
++            color: #f1c819;
++        }
++
++        .copyright {
++            font-size: 12px;
++            opacity: 0.8;
++            margin-top: 12px;
++        }
++
++        @media (max-width: 480px) {
++            .logo {
++                width: 160px;
++                height: 160px;
++            }
++
++            .tagline-main {
++                font-size: 16px;
++                padding: 0 10px;
++            }
++
++            .stats {
++                gap: 20px;
++            }
++
++            .stat-number {
++                font-size: 22px;
++            }
++
++            .stat-label {
++                font-size: 11px;
++            }
++
++            .link-button {
++                padding: 18px 20px;
++            }
++
++            .link-title {
++                font-size: 15px;
++            }
++
++            .link-subtitle {
++                font-size: 12px;
++                margin-left: 26px;
++            }
++
++            .badge {
++                font-size: 10px;
++                padding: 2px 6px;
++            }
++
++            .contact {
++                font-size: 16px;
++            }
++        }
++    </style>
++</head>
++<body>
++    <div class="container">
++        <div class="logo-container">
++            <div class="logo">
++                <img src="https://raw.githubusercontent.com/aswinv-dot/TerraTern-linktree/main/logo.png" alt="TerraTern Logo">
++            </div>
++        </div>
++
++        <div class="tagline">
++            <div class="tagline-main" id="tagline-text"></div>
++            <div class="stats" id="stats-row"></div>
++        </div>
++
++        <div class="links" id="links-list"></div>
++
++        <div class="footer">
++            <div class="contact" id="footer-phone"></div>
++            <a id="footer-map-link" target="_blank" style="text-decoration: none; color: white;">
++                <div class="contact" style="font-size: 14px; font-weight: 400; margin-top: 8px; margin-bottom: 16px; cursor: pointer; transition: color 0.3s ease;" id="footer-address"></div>
++            </a>
++            <div class="footer-links">
++                <a class="footer-link" id="footer-privacy">Privacy Policy</a>
++                <a class="footer-link" id="footer-terms">Terms &amp; Conditions</a>
++            </div>
++            <div class="copyright" id="footer-copyright"></div>
++        </div>
++    </div>
++
++    <script src="/linktree-config.js"></script>
++    <script>
++    (function () {
++        const cfg = window.LINKTREE_CONFIG || { stats: [], links: [], footer: {} };
++
++        document.getElementById('tagline-text').textContent = cfg.tagline || '';
++
++        document.getElementById('stats-row').innerHTML = (cfg.stats || []).map(s => `
++            <div class="stat-item">
++                <span class="stat-number">${s.number}</span>
++                <span class="stat-label">${s.label}</span>
++            </div>`).join('');
++
++        document.getElementById('links-list').innerHTML = (cfg.links || []).map(l => {
++            const badge = l.badge
++                ? `<span class="badge${l.badge.style === 'urgent' ? ' badge-urgent' : ''}">${l.badge.text}</span>`
++                : '';
++            return `
++                <a href="${l.url}" class="link-button">
++                    <div class="link-title">
++                        <span class="link-icon">${l.icon}</span>
++                        ${l.title}
++                        ${badge}
++                    </div>
++                    <div class="link-subtitle">${l.subtitle}</div>
++                </a>`;
++        }).join('');
++
++        const f = cfg.footer || {};
++        document.getElementById('footer-phone').textContent = f.phone || '';
++        document.getElementById('footer-address').textContent = f.address || '';
++        document.getElementById('footer-map-link').href = f.mapUrl || '#';
++        document.getElementById('footer-privacy').href = f.privacyUrl || '#';
++        document.getElementById('footer-terms').href = f.termsUrl || '#';
++        document.getElementById('footer-copyright').textContent = f.copyright || '';
++    })();
++    </script>
++</body>
++</html>
+-- 
+2.43.0
+

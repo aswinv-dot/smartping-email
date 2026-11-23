@@ -1,0 +1,67 @@
+From b859d12adbcecf0d82547e641e66d52fe8caa504 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 5 Oct 2026 06:17:01 +0000
+Subject: [PATCH] Update automation cron schedule to 8PM sync / 9PM send IST
+
+Replaces the temporary 10:45AM/10:50AM IST test schedule with the
+confirmed live schedule: pool sync from Metabase runs once daily at
+8:00 PM IST (14:30 UTC), and sends to due contacts run once daily at
+9:00 PM IST (15:30 UTC). Also updates the on-page hint text in
+email-automation.html, which still described a stale 3:00/3:05 PM IST
+schedule that didn't match the actual cron.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ cron/index.js                | 15 ++++++---------
+ public/email-automation.html |  2 +-
+ 2 files changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/cron/index.js b/cron/index.js
+index 3059a8c..e91d0df 100644
+--- a/cron/index.js
++++ b/cron/index.js
+@@ -155,13 +155,10 @@ log('TerraTern Email Cron Service started');
+ // ── EMAIL AUTOMATION ENGINE (continuous drip) ───────────────────
+ // Two separate daily moments — all the actual logic lives in
+ // /api/email/automation/run on Vercel; this is just the alarm clock:
+-//  - 10:45 AM IST (05:15 UTC): sync the pool from Metabase
++//  - 8:00 PM IST (14:30 UTC): sync the pool from Metabase
+ //    (webinar_attended='Yes'). No sending happens here.
+-//  - 10:50 AM IST (05:20 UTC): send to whoever's due their next sequence
+-//    step. TEMPORARY for testing — normally 8:00 PM IST (14:30 UTC),
+-//    within the requested 5pm-6am sending window; moved earlier for now
+-//    so today's test batches don't have to wait until evening. Revert
+-//    the cron.schedule line below to '30 14 * * *' once testing is done.
++//  - 9:00 PM IST (15:30 UTC): send to whoever's due their next sequence
++//    step.
+ async function runEmailAutomationPhase(phase) {
+   log(`Email automation: firing ${phase} tick...`);
+   try {
+@@ -174,7 +171,7 @@ async function runEmailAutomationPhase(phase) {
+     log(`Email automation ${phase} tick failed: ${e.message}`);
+   }
+ }
+-cron.schedule('15 5 * * *', () => runEmailAutomationPhase('sync'), { timezone: 'UTC' });
+-cron.schedule('20 5 * * *', () => runEmailAutomationPhase('send'), { timezone: 'UTC' });
++cron.schedule('30 14 * * *', () => runEmailAutomationPhase('sync'), { timezone: 'UTC' });
++cron.schedule('30 15 * * *', () => runEmailAutomationPhase('send'), { timezone: 'UTC' });
+ 
+-log('Service running — email campaign queue polling every 4s, automation ticks at 10:45AM/10:50AM IST (TEMP test schedule)');
++log('Service running — email campaign queue polling every 4s, automation ticks at 8:00PM/9:00PM IST');
+diff --git a/public/email-automation.html b/public/email-automation.html
+index 9dc001b..9700f66 100644
+--- a/public/email-automation.html
++++ b/public/email-automation.html
+@@ -107,7 +107,7 @@ textarea.form-input{resize:vertical;min-height:70px;font-family:monospace;font-s
+       <button class="btn-ghost" onclick="runNow()">Run Now (manual tick)</button>
+       <span class="status-msg" id="engine-msg"></span>
+     </div>
+-    <div class="form-hint" style="margin-top:10px">Two automatic ticks a day: pool syncs from Metabase at 3:00 PM IST, sending happens at 3:05 PM IST (temporary test schedule) — every pool contact due their next step gets it (up to 300 sends per tick as a safety cap). "Run Now" below does both immediately, for testing. Sending is skipped entirely while the engine is stopped/paused.</div>
++    <div class="form-hint" style="margin-top:10px">Two automatic ticks a day: pool syncs from Metabase at 8:00 PM IST, sending happens at 9:00 PM IST — every pool contact due their next step gets it (up to 300 sends per tick as a safety cap). "Run Now" below does both immediately, for testing. Sending is skipped entirely while the engine is stopped/paused.</div>
+   </div>
+ 
+   <!-- PER-STEP ANALYTICS -->
+-- 
+2.43.0
+

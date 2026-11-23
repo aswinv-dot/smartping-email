@@ -1,0 +1,38 @@
+From 4e8db93d07542c89089f0dcce9147b1b760fc6ea Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 10:46:13 +0000
+Subject: [PATCH] Proxy /linkinbio.html on this domain to smartping-email's
+ linktree page
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Adds a rewrite so pages.terratern.com/linkinbio.html transparently
+serves smartping-email's /linktree.html (the public link-in-bio page,
+whose content is now edited from a CMS in the Marketing CRM). The URL
+bar stays as pages.terratern.com — this is a proxy rewrite to a full
+external URL, not a redirect. Every other route on this domain and
+project is untouched.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ vercel.json | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/vercel.json b/vercel.json
+index 1b5d45f..ac442a1 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,6 +1,7 @@
+ {
+   "trailingSlash": false,
+   "rewrites": [
+-    { "source": "/", "destination": "/ausbildung-alumni.html" }
++    { "source": "/", "destination": "/ausbildung-alumni.html" },
++    { "source": "/linkinbio.html", "destination": "https://smartping-email.vercel.app/linktree.html" }
+   ]
+ }
+-- 
+2.43.0
+

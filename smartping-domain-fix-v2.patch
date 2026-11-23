@@ -1,0 +1,40 @@
+From f1d5ada30e2a7a65b1723eaa72b0cedd781508e4 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 10:46:08 +0000
+Subject: [PATCH] =?UTF-8?q?Drop=20the=20host-based=20rewrite=20here=20?=
+ =?UTF-8?q?=E2=80=94=20domain=20stays=20on=20the=20other=20project?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+pages.terratern.com hosts several other landing pages and can't move
+to this project without breaking them. Proxying /linkinbio.html to
+this deployment now happens from terratern-ads-landing-page's own
+vercel.json instead (a rewrite to this project's full URL), so this
+project needs no domain-specific rewrite of its own.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ vercel.json | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/vercel.json b/vercel.json
+index aec7901..c29018c 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,11 +1,4 @@
+ {
+-  "rewrites": [
+-    {
+-      "source": "/linkinbio.html",
+-      "has": [{ "type": "host", "value": "pages.terratern.com" }],
+-      "destination": "/linktree.html"
+-    }
+-  ],
+   "functions": {
+     "pages/api/cron-simple.js": {
+       "maxDuration": 300
+-- 
+2.43.0
+

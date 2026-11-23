@@ -1,0 +1,25 @@
+From 14fa8bdd65b37960dfe20d58a1a66eee79e9ebc6 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 12:31:39 +0000
+Subject: [PATCH] Point Copy Link to pages.terratern.com custom domain URLs
+
+---
+ public/alumni-webinar-admin.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/public/alumni-webinar-admin.html b/public/alumni-webinar-admin.html
+index c3b1bab..1019bc2 100644
+--- a/public/alumni-webinar-admin.html
++++ b/public/alumni-webinar-admin.html
+@@ -195,7 +195,7 @@ function switchProgram(p) {
+ }
+ 
+ async function copyPageUrl() {
+-  const url = window.location.origin + '/' + PROGRAMS[currentProgram].page;
++  const url = 'https://pages.terratern.com/' + PROGRAMS[currentProgram].page;
+   const btn = document.getElementById('copy-link-btn');
+   try {
+     await navigator.clipboard.writeText(url);
+-- 
+2.43.0
+

@@ -1,0 +1,62 @@
+From de856c52616a69213c4379672907c6759df1ce0c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 07:38:58 +0000
+Subject: [PATCH] Revert "Wrap linktree page in the CRM sidebar under Social
+ Media x Linktree"
+
+This reverts commit fb40ebe1859f9d345e30e95146b574a26ef9e6c9.
+---
+ public/linktree.html | 10 ----------
+ public/shell.js      |  7 -------
+ 2 files changed, 17 deletions(-)
+
+diff --git a/public/linktree.html b/public/linktree.html
+index 3ba23a9..5e96bf6 100644
+--- a/public/linktree.html
++++ b/public/linktree.html
+@@ -12,7 +12,6 @@
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>TerraTern</title>
+     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+-    <link rel="stylesheet" href="/shell.css"/>
+     <style>
+         * {
+             margin: 0;
+@@ -281,16 +280,7 @@
+                 font-size: 16px;
+             }
+         }
+-
+-        /* This page keeps its own full-bleed blue background and centered
+-           layout even inside the CRM shell — .app-main just shifts right
+-           to clear the sidebar, same as every other wrapped page. */
+-        .app-main {
+-            display: flex; flex-direction: column; align-items: center;
+-            padding: 20px; background: #255cc1;
+-        }
+     </style>
+-    <script src="/shell.js" defer></script>
+ </head>
+ <body>
+     <div class="container">
+diff --git a/public/shell.js b/public/shell.js
+index afab93a..5b91630 100644
+--- a/public/shell.js
++++ b/public/shell.js
+@@ -37,13 +37,6 @@
+         { label: 'Dashboard', href: '/capi-dashboard.html', icon: '📊' },
+       ],
+     },
+-    {
+-      id: 'linktree',
+-      name: 'Social Media x Linktree',
+-      links: [
+-        { label: 'Linktree', href: '/linktree.html', icon: '🔗' },
+-      ],
+-    },
+   ];
+ 
+   function getPref(key, fallback) {
+-- 
+2.43.0
+

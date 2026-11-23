@@ -1,0 +1,160 @@
+From 816e00f126586c114dc6d053622982ad9f4eae48 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 10:36:37 +0000
+Subject: [PATCH] Switch Linktree CMS storage from Vercel Blob to Supabase
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Save was failing because Vercel Blob storage was never connected in
+the Vercel dashboard. Switching to the same Supabase project already
+used by lib/whatsapp-supabase.js and the CAPI dashboard — same
+pattern as terratern-ads-landing-page's admin.html — so this needs
+no Vercel-side setup at all, just a one-time table creation (see
+below), same as how the other Supabase-backed panels already work.
+
+- lib/linktree-supabase.js replaces lib/linktree-store.js: reads/
+  writes a single row (id=1) in a new `linktree_config` table via
+  plain REST calls with the anon key, instead of @vercel/blob
+- pages/api/linktree/config.js now imports from the new file
+- removed the unused @vercel/blob dependency
+
+ONE-TIME SETUP — run this once in the Supabase SQL editor for this
+project (oagsgovnxgiszofgytre) before Save will work:
+
+  create table if not exists linktree_config (
+    id int primary key,
+    data jsonb not null,
+    updated_at timestamptz default now()
+  );
+  alter table linktree_config disable row level security;
+
+(RLS is disabled to match how the project's other tables are already
+reachable with just the anon key from these same admin pages.)
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ ...linktree-store.js => linktree-supabase.js} | 63 ++++++++++++-------
+ package.json                                  |  3 +-
+ pages/api/linktree/config.js                  |  2 +-
+ 3 files changed, 43 insertions(+), 25 deletions(-)
+ rename lib/{linktree-store.js => linktree-supabase.js} (66%)
+
+diff --git a/lib/linktree-store.js b/lib/linktree-supabase.js
+similarity index 66%
+rename from lib/linktree-store.js
+rename to lib/linktree-supabase.js
+index e99436c..1c0f413 100644
+--- a/lib/linktree-store.js
++++ b/lib/linktree-supabase.js
+@@ -1,17 +1,28 @@
+-// Linktree content store — backed by Vercel Blob storage.
++// Linktree content store — backed by the same Supabase project already
++// used elsewhere in this CRM (lib/whatsapp-supabase.js, capi-dashboard.html).
++// One row in `linktree_config` (id=1) holds the whole config as jsonb.
+ //
+-// Why Blob and not a plain file: this app runs on Vercel, where the
+-// filesystem is read-only at runtime, so a serverless function can't just
+-// write a file and have it persist. Blob storage is Vercel's own file
+-// store — turn it on once in your project's Storage tab and it auto-adds
+-// the BLOB_READ_WRITE_TOKEN env var, no manual token to create.
++// Table needs creating once — run this in the Supabase SQL editor:
+ //
+-// Until Blob storage is connected (or before the first save), getConfig()
+-// falls back to DEFAULT_CONFIG below so the page and CMS still work.
++//   create table if not exists linktree_config (
++//     id int primary key,
++//     data jsonb not null,
++//     updated_at timestamptz default now()
++//   );
++//   alter table linktree_config disable row level security;
++//
++// (RLS is disabled here to match how the other tables in this project —
++// campaign_schedule, sent_log, etc. — are already reachable with just the
++// anon key from these same admin pages.)
+ 
+-import { put, list } from "@vercel/blob";
++const SUPABASE_URL = "https://oagsgovnxgiszofgytre.supabase.co";
++const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hZ3Nnb3ZueGdpc3pvZmd5dHJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MzA1MjgsImV4cCI6MjA5NjEwNjUyOH0.V3eNIE3PXAcMuS3Gv0tBb3kqjVRAI25tSj8ED5W7vmI";
+ 
+-const BLOB_PATH = "linktree-config.json";
++const HEADERS = {
++  apikey: SUPABASE_KEY,
++  Authorization: `Bearer ${SUPABASE_KEY}`,
++  "Content-Type": "application/json",
++};
+ 
+ export const DEFAULT_CONFIG = {
+   tagline: "One Stop Solution to Global Talent Mobility",
+@@ -105,24 +116,32 @@ export const DEFAULT_CONFIG = {
+ 
+ export async function getConfig() {
+   try {
+-    const { blobs } = await list({ prefix: BLOB_PATH, limit: 1 });
+-    const match = blobs.find((b) => b.pathname === BLOB_PATH);
+-    if (!match) return DEFAULT_CONFIG;
+-    const res = await fetch(match.url, { cache: "no-store" });
++    const res = await fetch(
++      `${SUPABASE_URL}/rest/v1/linktree_config?id=eq.1&select=data`,
++      { headers: HEADERS, cache: "no-store" }
++    );
+     if (!res.ok) return DEFAULT_CONFIG;
+-    return await res.json();
++    const rows = await res.json();
++    if (!rows || !rows[0] || !rows[0].data) return DEFAULT_CONFIG;
++    return rows[0].data;
+   } catch (e) {
+-    // Blob store not connected yet, or a transient error — fall back so
+-    // the page/CMS still render instead of hard-failing.
++    // Table not created yet, or a transient error — fall back so the page
++    // and CMS still render instead of hard-failing.
+     return DEFAULT_CONFIG;
+   }
+ }
+ 
+ export async function saveConfig(data) {
+-  await put(BLOB_PATH, JSON.stringify(data, null, 2), {
+-    access: "public",
+-    addRandomSuffix: false,
+-    allowOverwrite: true,
+-    contentType: "application/json",
++  const res = await fetch(`${SUPABASE_URL}/rest/v1/linktree_config`, {
++    method: "POST",
++    headers: {
++      ...HEADERS,
++      Prefer: "resolution=merge-duplicates",
++    },
++    body: JSON.stringify({ id: 1, data, updated_at: new Date().toISOString() }),
+   });
++  if (!res.ok) {
++    const text = await res.text().catch(() => "");
++    throw new Error(`Supabase save failed (${res.status}): ${text}`);
++  }
+ }
+diff --git a/package.json b/package.json
+index a830072..7ab4fff 100644
+--- a/package.json
++++ b/package.json
+@@ -11,7 +11,6 @@
+     "next": "14.2.3",
+     "react": "18.3.1",
+     "react-dom": "18.3.1",
+-    "@supabase/supabase-js": "^2.39.0",
+-    "@vercel/blob": "^0.27.1"
++    "@supabase/supabase-js": "^2.39.0"
+   }
+ }
+diff --git a/pages/api/linktree/config.js b/pages/api/linktree/config.js
+index 20a8f00..f31abd1 100644
+--- a/pages/api/linktree/config.js
++++ b/pages/api/linktree/config.js
+@@ -1,4 +1,4 @@
+-import { getConfig, saveConfig } from "../../../lib/linktree-store";
++import { getConfig, saveConfig } from "../../../lib/linktree-supabase";
+ 
+ export default async function handler(req, res) {
+   res.setHeader("Access-Control-Allow-Origin", "*");
+-- 
+2.43.0
+

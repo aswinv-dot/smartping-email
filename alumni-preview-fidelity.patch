@@ -1,0 +1,132 @@
+From 88b05763921a5df1a7169d75778bf7d5e557f56c Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 12:34:10 +0000
+Subject: [PATCH 1/2] Wire real leads Google Sheet link into Alumni Webinar CMS
+
+---
+ public/alumni-webinar-admin.html | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/public/alumni-webinar-admin.html b/public/alumni-webinar-admin.html
+index 1019bc2..482f19d 100644
+--- a/public/alumni-webinar-admin.html
++++ b/public/alumni-webinar-admin.html
+@@ -83,7 +83,10 @@ body{font-family:'Inter',sans-serif}
+             <div class="cms-title">Alumni Webinar CMS</div>
+             <div class="cms-sub">Edit speaker, webinar details and CTA for each alumni webinar page</div>
+           </div>
+-          <button class="copy-link-btn" id="copy-link-btn" onclick="copyPageUrl()">🔗 Copy Link</button>
++          <div style="display:flex;gap:8px;flex-wrap:wrap">
++            <a class="copy-link-btn" href="https://docs.google.com/spreadsheets/d/1i3aEXBgyF8CRSNKwcbUggDGl_mUWU4qyrLZDf6i2Ci4/edit?gid=0#gid=0" target="_blank" rel="noopener" style="text-decoration:none;display:inline-block">📋 Leads Sheet</a>
++            <button class="copy-link-btn" id="copy-link-btn" onclick="copyPageUrl()">🔗 Copy Link</button>
++          </div>
+         </div>
+ 
+         <div class="program-tabs">
+@@ -92,7 +95,7 @@ body{font-family:'Inter',sans-serif}
+         </div>
+ 
+         <div class="leads-note">
+-          Registrations submit to a Google Apps Script endpoint (set below), which is expected to write into a Google Sheet on the connected Google account. This CMS has no direct visibility into that Sheet — open the Apps Script project bound to the <code>googleScriptURL</code> below in Google Drive/Apps Script to find its linked spreadsheet.
++          Registrations for both webinars land in <a href="https://docs.google.com/spreadsheets/d/1i3aEXBgyF8CRSNKwcbUggDGl_mUWU4qyrLZDf6i2Ci4/edit?gid=0#gid=0" target="_blank" rel="noopener">this Google Sheet</a>, via the Google Apps Script URL set below.
+         </div>
+ 
+         <div class="section-card">
+-- 
+2.43.0
+
+
+From 65600e29566286d5893650a97c2d34604017eb65 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 12:38:22 +0000
+Subject: [PATCH 2/2] Make CMS live preview mirror the real hero section design
+ (gradient, badge, speaker strip, schedule pills)
+
+---
+ public/alumni-webinar-admin.html | 48 ++++++++++++++++++++++++--------
+ 1 file changed, 36 insertions(+), 12 deletions(-)
+
+diff --git a/public/alumni-webinar-admin.html b/public/alumni-webinar-admin.html
+index 482f19d..02b52a9 100644
+--- a/public/alumni-webinar-admin.html
++++ b/public/alumni-webinar-admin.html
+@@ -24,7 +24,15 @@ body{font-family:'Inter',sans-serif}
+   height:100vh;overflow-y:auto;display:flex;justify-content:center;
+   padding:40px 24px;
+ }
+-.cms-preview-card{width:100%;max-width:360px;background:rgba(255,255,255,0.06);border-radius:20px;padding:24px;align-self:flex-start}
++.cms-preview-card{width:100%;max-width:360px;align-self:flex-start}
++.pv-hero{
++  background:linear-gradient(160deg,#00215c 0%,#0a3278 100%);color:#fff;
++  border-radius:20px;padding:24px 20px;position:relative;overflow:hidden;
++}
++.pv-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(241,200,25,0.15);border:1px solid rgba(241,200,25,0.35);color:var(--gold);font-size:0.7rem;font-weight:600;padding:5px 12px;border-radius:100px;margin-bottom:12px;letter-spacing:0.04em;text-transform:uppercase}
++.pv-badge-dot{width:6px;height:6px;background:var(--gold);border-radius:50%}
++.pv-hero-title{font-size:1.15rem;font-weight:800;line-height:1.25;margin-bottom:8px}
++.pv-hero-sub{font-size:0.82rem;color:rgba(255,255,255,0.75);margin-bottom:16px}
+ 
+ .cms-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+ .cms-title{font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:4px}
+@@ -65,11 +73,12 @@ body{font-family:'Inter',sans-serif}
+ .leads-note a{color:var(--blue);font-weight:700}
+ 
+ /* PREVIEW CARD */
+-.pv-avatar{width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:rgba(255,255,255,0.1);margin-bottom:14px}
+-.pv-name{font-weight:700;color:#fff;font-size:1rem}
+-.pv-role{font-size:0.78rem;color:var(--sky);margin-top:3px}
+-.pv-date{font-size:0.78rem;color:rgba(255,255,255,0.6);margin-top:3px}
+-.pv-title{font-size:0.95rem;font-weight:700;color:#fff;margin-top:16px;line-height:1.4}
++.pv-speaker-strip{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:12px 14px;margin-bottom:16px}
++.pv-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);background:rgba(255,255,255,0.1);flex-shrink:0}
++.pv-name{font-weight:700;color:#fff;font-size:0.92rem}
++.pv-role{font-size:0.76rem;color:var(--sky);margin-top:2px}
++.pv-schedule-row{display:flex;flex-wrap:wrap;gap:8px}
++.pv-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);padding:6px 11px;border-radius:100px;font-size:0.72rem;font-weight:500;white-space:nowrap}
+ </style>
+ </head>
+ <body>
+@@ -165,11 +174,22 @@ body{font-family:'Inter',sans-serif}
+ 
+       <div class="cms-preview-pane">
+         <div class="cms-preview-card">
+-          <img class="pv-avatar" id="prev-img" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
+-          <div class="pv-name" id="prev-name">Speaker Name</div>
+-          <div class="pv-role" id="prev-role">Role</div>
+-          <div class="pv-date" id="prev-date">Date and Time</div>
+-          <div class="pv-title" id="prev-title">Webinar title preview</div>
++          <div class="pv-hero">
++            <div class="pv-badge"><span class="pv-badge-dot"></span> Free Live Webinar</div>
++            <div class="pv-hero-title" id="prev-title">Webinar title preview</div>
++            <div class="pv-hero-sub" id="prev-sub">Join our alumnus live for a real, no-brochure walkthrough</div>
++            <div class="pv-speaker-strip">
++              <img class="pv-avatar" id="prev-img" src="https://i.ibb.co/xKQbBPYy/Screenshot-2026-06-25-at-3-15-19-PM.png" alt="Speaker"/>
++              <div>
++                <div class="pv-name" id="prev-name">Speaker Name</div>
++                <div class="pv-role" id="prev-role">Role</div>
++              </div>
++            </div>
++            <div class="pv-schedule-row">
++              <div class="pv-pill" id="prev-date">📅 Date</div>
++              <div class="pv-pill" id="prev-time">🕐 Time</div>
++            </div>
++          </div>
+         </div>
+       </div>
+     </div>
+@@ -270,8 +290,12 @@ function livePreview() {
+   const title = document.getElementById('f-webinar-title').value;
+   document.getElementById('prev-name').textContent  = name || 'Speaker Name';
+   document.getElementById('prev-role').textContent  = role || 'Role';
+-  document.getElementById('prev-date').textContent  = (date || time) ? `${date} at ${time}` : 'Date and Time';
++  document.getElementById('prev-date').textContent  = '📅 ' + (date || 'Date');
++  document.getElementById('prev-time').textContent  = '🕐 ' + (time || 'Time');
+   document.getElementById('prev-title').textContent = title || 'Webinar title preview';
++  document.getElementById('prev-sub').textContent = name
++    ? `Join ${name} live${date ? ' on ' + date : ''}${time ? ' at ' + time : ''}`
++    : 'Join our alumnus live for a real, no-brochure walkthrough';
+   setStatus('Unsaved changes', '');
+ }
+ 
+-- 
+2.43.0
+

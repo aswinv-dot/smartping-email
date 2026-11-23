@@ -18,19 +18,6 @@ function resolveTokens(html, contact) {
     .replace(/\{\{mobile\}\}/g, contact.mobile || '');
 }
 
-// Supabase returns at most 1000 rows per request, so large tables must be
-// read in pages or rows past the 1000th are silently never seen.
-async function fetchAllRows(build) {
-  const out = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await build().order('id', { ascending: true }).range(from, from + 999);
-    if (error) return { data: null, error };
-    out.push(...(data || []));
-    if (!data || data.length < 1000) break;
-  }
-  return { data: out, error: null };
-}
-
 // Hard ceiling per invocation, so a large pool can't try to push
 // thousands of sends through one synchronous serverless call and hit its
 // timeout. Purely a request-shape safety net. If more than this many are
@@ -70,7 +57,7 @@ async function syncPoolFromMetabase() {
 
   let added = 0;
   if (unique.length) {
-    const { data: existing } = await fetchAllRows(() => sb.from('email_automation_pool').select('id,email'));
+    const { data: existing } = await sb.from('email_automation_pool').select('email');
     const existingSet = new Set((existing || []).map(e => e.email.toLowerCase()));
     const toInsert = unique.filter(c => !existingSet.has(c.email));
     if (toInsert.length) {
@@ -122,7 +109,7 @@ export default async function handler(req, res) {
     if (seqErr) throw seqErr;
     if (!sequence?.length) return res.status(200).json({ success: true, skipped: true, reason: 'no sequence configured', phase, sync });
 
-    const { data: pool, error: poolErr } = await fetchAllRows(() => sb.from('email_automation_pool').select('*').eq('status', 'active'));
+    const { data: pool, error: poolErr } = await sb.from('email_automation_pool').select('*').eq('status', 'active');
     if (poolErr) throw poolErr;
 
     const { data: unsubs } = await sb.from('email_unsubscribes').select('email');

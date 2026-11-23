@@ -1,0 +1,135 @@
+From 7d524c1a933a0b8bd98bf8ba3948f54924b179fb Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 10:42:33 +0000
+Subject: [PATCH 1/3] Rewrite pages.terratern.com root to serve the linktree
+ page
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Lets the CMS keep living here (Marketing CRM sidebar) while the
+public-facing domain still points at just the linktree page: any
+request to pages.terratern.com/ is rewritten (not redirected — the
+URL bar still shows pages.terratern.com) to /linktree.html.
+
+Two manual steps in Vercel still needed for this to take effect:
+1. Remove pages.terratern.com from the terratern-ads-landing-page
+   project's Domains settings (a domain can only be attached to one
+   Vercel project at a time).
+2. Add pages.terratern.com to this project's (smartping-email)
+   Domains settings instead.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ vercel.json | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/vercel.json b/vercel.json
+index c29018c..9b6b051 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,4 +1,11 @@
+ {
++  "rewrites": [
++    {
++      "source": "/",
++      "has": [{ "type": "host", "value": "pages.terratern.com" }],
++      "destination": "/linktree.html"
++    }
++  ],
+   "functions": {
+     "pages/api/cron-simple.js": {
+       "maxDuration": 300
+-- 
+2.43.0
+
+
+From e202b1f19405b11cf3f3b86218c64739a56114d5 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 10:43:01 +0000
+Subject: [PATCH 2/3] Serve linktree at pages.terratern.com/linkinbio.html, not
+ root
+
+Changed the rewrite path from "/" to "/linkinbio.html" per your
+call on the URL. Also updated the CMS's Copy Link button to copy
+the real public URL (https://pages.terratern.com/linkinbio.html)
+instead of this deployment's own domain.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ public/linktree-admin.html | 2 +-
+ vercel.json                | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/public/linktree-admin.html b/public/linktree-admin.html
+index 54dafa6..588374a 100644
+--- a/public/linktree-admin.html
++++ b/public/linktree-admin.html
+@@ -403,7 +403,7 @@ function setStatus(msg, cls) {
+ }
+ 
+ async function copyLinktreeUrl() {
+-  const url = window.location.origin + '/linktree.html';
++  const url = 'https://pages.terratern.com/linkinbio.html';
+   const btn = document.getElementById('copy-link-btn');
+   try {
+     await navigator.clipboard.writeText(url);
+diff --git a/vercel.json b/vercel.json
+index 9b6b051..aec7901 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,7 +1,7 @@
+ {
+   "rewrites": [
+     {
+-      "source": "/",
++      "source": "/linkinbio.html",
+       "has": [{ "type": "host", "value": "pages.terratern.com" }],
+       "destination": "/linktree.html"
+     }
+-- 
+2.43.0
+
+
+From 9fca23927948328cf163f6f0686970940b05c683 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 29 Sep 2026 10:46:08 +0000
+Subject: [PATCH 3/3] =?UTF-8?q?Drop=20the=20host-based=20rewrite=20here=20?=
+ =?UTF-8?q?=E2=80=94=20domain=20stays=20on=20the=20other=20project?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+pages.terratern.com hosts several other landing pages and can't move
+to this project without breaking them. Proxying /linkinbio.html to
+this deployment now happens from terratern-ads-landing-page's own
+vercel.json instead (a rewrite to this project's full URL), so this
+project needs no domain-specific rewrite of its own.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LHzxqv9S6k47oG19wZF3Kx
+---
+ vercel.json | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/vercel.json b/vercel.json
+index aec7901..c29018c 100644
+--- a/vercel.json
++++ b/vercel.json
+@@ -1,11 +1,4 @@
+ {
+-  "rewrites": [
+-    {
+-      "source": "/linkinbio.html",
+-      "has": [{ "type": "host", "value": "pages.terratern.com" }],
+-      "destination": "/linktree.html"
+-    }
+-  ],
+   "functions": {
+     "pages/api/cron-simple.js": {
+       "maxDuration": 300
+-- 
+2.43.0
+
